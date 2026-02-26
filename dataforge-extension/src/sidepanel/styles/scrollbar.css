@@ -1,0 +1,73 @@
+/* ------------------------------------------------------------------ */
+/* DataForge - Custom Scrollbar Styling                               */
+/* Thin (6px), rounded, emerald thumb on dark track                   */
+/* ------------------------------------------------------------------ */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1E4D3D transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E4D3D;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #14B8A6;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Thin scrollbar variant for nested containers */
+.scrollbar-emerald {
+  scrollbar-width: thin;
+  scrollbar-color: #1E4D3D transparent;
+}
+
+.scrollbar-emerald::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-emerald::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-emerald::-webkit-scrollbar-thumb {
+  background: #1E4D3D;
+  border-radius: 2px;
+}
+
+.scrollbar-emerald::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
+
+/* Invisible scrollbar that still allows scrolling */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

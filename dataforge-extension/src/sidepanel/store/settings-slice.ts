@@ -26,31 +26,40 @@ const PERSIST_DEBOUNCE_MS = 500;
  * Deep-merge `source` into `target`. Only merges plain objects recursively;
  * arrays and primitives are replaced outright.
  */
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
-  const result = { ...target };
+function deepMerge<T>(target: T, source: DeepPartial<T>): T {
+  if (
+    target === null ||
+    target === undefined ||
+    typeof target !== 'object' ||
+    Array.isArray(target)
+  ) {
+    return (source as T) ?? target;
+  }
 
-  for (const key of Object.keys(source) as Array<keyof T>) {
-    const sourceVal = source[key];
-    const targetVal = target[key];
+  const result = { ...target } as Record<string, unknown>;
+  const src = source as Record<string, unknown>;
+
+  for (const key of Object.keys(src)) {
+    const sourceVal = src[key];
+    const targetVal = result[key];
 
     if (
       sourceVal !== null &&
+      sourceVal !== undefined &&
       typeof sourceVal === 'object' &&
       !Array.isArray(sourceVal) &&
       targetVal !== null &&
+      targetVal !== undefined &&
       typeof targetVal === 'object' &&
       !Array.isArray(targetVal)
     ) {
-      result[key] = deepMerge(
-        targetVal as Record<string, unknown>,
-        sourceVal as Record<string, unknown>,
-      ) as T[keyof T];
+      result[key] = deepMerge(targetVal, sourceVal);
     } else if (sourceVal !== undefined) {
-      result[key] = sourceVal as T[keyof T];
+      result[key] = sourceVal;
     }
   }
 
-  return result;
+  return result as T;
 }
 
 // ---------------------------------------------------------------------------

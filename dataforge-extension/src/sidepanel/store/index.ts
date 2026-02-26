@@ -42,8 +42,12 @@ export type StoreState =
  */
 function isDebugMode(): boolean {
   try {
-    // Vite injects import.meta.env.MODE at build time
-    if (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') {
+    // Vite injects import.meta.env.MODE at build time.
+    // Access via bracket notation to avoid TS errors when vite/client types
+    // are not referenced in tsconfig.
+    const meta = import.meta as unknown as Record<string, unknown>;
+    const env = meta['env'] as Record<string, unknown> | undefined;
+    if (env?.['MODE'] === 'development') {
       return true;
     }
   } catch {

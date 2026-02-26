@@ -34,49 +34,57 @@ export function easeInOutQuad(t: number): number {
 // Reduced motion check
 // ---------------------------------------------------------------------------
 
+/** Cached media query to avoid repeated matchMedia calls. */
+let reducedMotionQuery: MediaQueryList | null = null;
+
 /** Returns `true` if the user has NOT requested reduced motion. */
 export function shouldAnimate(): boolean {
   if (typeof window === 'undefined') return false;
-  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  return !mq.matches;
+  if (!reducedMotionQuery) {
+    reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  }
+  return !reducedMotionQuery.matches;
 }
 
 // ---------------------------------------------------------------------------
 // Spring animation
 // ---------------------------------------------------------------------------
 
-export interface SpringConfig {
-  stiffness: number;
-  damping: number;
+export interface SpringResult {
+  value: number;
+  done: boolean;
 }
 
 /**
  * Creates a spring animation function that interpolates from `from` to `to`.
  *
  * Returns a function that, given elapsed time in seconds, returns the current
- * value. The spring settles when velocity drops below a threshold.
+ * value and whether the spring has settled.
+ *
+ * Uses a critically-damped or under-damped spring model depending on the
+ * damping ratio. All resulting values can be applied directly to GPU-
+ * accelerated CSS properties (transform, opacity).
  *
  * @param from - Start value
  * @param to - End value
  * @param stiffness - Spring stiffness (default 180)
- * @param damping - Damping ratio (default 12)
- * @returns A function `(elapsedSec: number) => { value: number; done: boolean }`
+ * @param damping - Damping coefficient (default 12)
+ * @returns A function `(elapsedSec: number) => SpringResult`
  */
 export function springAnimation(
   from: number,
   to: number,
   stiffness: number = 180,
   damping: number = 12,
-): (elapsedSec: number) => { value: number; done: boolean } {
+): (elapsedSec: number) => SpringResult {
   const delta = to - from;
   const dampingRatio = damping / (2 * Math.sqrt(stiffness));
   const angularFreq = Math.sqrt(stiffness);
 
-  // Velocity threshold for settling
   const REST_THRESHOLD = 0.001;
   const DISPLACEMENT_THRESHOLD = 0.001;
 
-  return (elapsedSec: number) => {
+  return (elapsedSec: number): SpringResult => {
     if (!shouldAnimate()) {
       return { value: to, done: true };
     }
@@ -85,7 +93,7 @@ export function springAnimation(
     let velocity: number;
 
     if (dampingRatio < 1) {
-      // Under-damped: oscillates
+      // Under-damped: oscillates toward target
       const dampedFreq = angularFreq * Math.sqrt(1 - dampingRatio * dampingRatio);
       const envelope = Math.exp(-dampingRatio * angularFreq * elapsedSec);
       displacement =
@@ -101,11 +109,10 @@ export function springAnimation(
           Math.sin(dampedFreq * elapsedSec)) /
         dampedFreq;
     } else {
-      // Critically damped or over-damped
+      // Critically damped or over-damped: no oscillation
       const envelope = Math.exp(-angularFreq * elapsedSec);
       displacement = -delta * envelope * (1 + angularFreq * elapsedSec);
-      velocity =
-        delta * angularFreq * angularFreq * elapsedSec * envelope;
+      velocity = delta * angularFreq * angularFreq * elapsedSec * envelope;
     }
 
     const currentValue = to + displacement;
@@ -133,7 +140,7 @@ export interface Rect {
  *
  * Calculates the transform needed to move an element from its `first`
  * position to its `last` position, applies the inversion, and plays the
- * transition using GPU-accelerated transforms.
+ * transition using GPU-accelerated transforms only.
  *
  * @param element - The DOM element to animate
  * @param first - Rect captured before the layout change
@@ -195,7 +202,7 @@ export function flipAnimation(
 /**
  * Calculates stagger delay for list animations.
  *
- * Uses an eased curve so earlier items feel snappy while later items
+ * Uses a logarithmic curve so earlier items feel snappy while later items
  * have slightly longer delays, preventing a machine-gun feel.
  *
  * @param index - The item's zero-based index
@@ -204,7 +211,6 @@ export function flipAnimation(
  */
 export function staggerDelay(index: number, baseDelay: number = 30): number {
   if (!shouldAnimate()) return 0;
-  // Logarithmic curve: each subsequent item has a slightly smaller increment
   return Math.round(baseDelay * Math.log2(index + 2));
 }
 
@@ -215,9 +221,10 @@ export function staggerDelay(index: number, baseDelay: number = 30): number {
 /**
  * Smoothly animate a number from `from` to `to` over `duration` ms.
  *
- * Uses `requestAnimationFrame` for smooth 60fps updates and `easeOutCubic`
+ * Uses `requestAnimationFrame` for smooth 60fps updates with `easeOutCubic`
  * easing. The callback receives the current interpolated value (rounded to
- * the nearest integer).
+ * the nearest integer). Only drives GPU-accelerated property updates when
+ * the consumer applies values to transform/opacity.
  *
  * @param from - Start value
  * @param to - End value
@@ -273,22 +280,24 @@ export function animateNumber(
 // Particle burst (confetti effect)
 // ---------------------------------------------------------------------------
 
-export interface Particle {
+interface ParticleState {
   x: number;
   y: number;
   vx: number;
   vy: number;
   size: number;
   opacity: number;
-  color: string;
+  rotation: number;
+  rotationSpeed: number;
   element: HTMLDivElement;
 }
 
 /**
  * Creates a particle burst at the specified coordinates.
  *
- * Particles are absolutely positioned `div` elements with GPU-accelerated
- * transforms. They fly outward and fade over ~600ms, then self-clean.
+ * Particles are absolutely positioned `div` elements animated with
+ * GPU-accelerated transforms (translate3d + rotate3d) and opacity only.
+ * They fly outward and fade over ~600ms, then self-clean from the DOM.
  *
  * @param x - Center X coordinate (viewport-relative)
  * @param y - Center Y coordinate (viewport-relative)
@@ -309,26 +318,30 @@ export function createParticles(
     'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;overflow:hidden;';
   document.documentElement.appendChild(container);
 
-  const particles: Particle[] = [];
+  const particles: ParticleState[] = [];
   const LIFETIME_MS = 600;
   const GRAVITY = 0.15;
+
+  // Emerald palette variations for visual interest
+  const colors = [color, '#14B8A6', '#34D399', '#6EE7B7'];
 
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
     const speed = 2 + Math.random() * 4;
     const size = 3 + Math.random() * 4;
+    const particleColor = colors[i % colors.length];
 
     const el = document.createElement('div');
     el.style.cssText = `
-      position: absolute;
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: 50%;
-      background: ${color};
-      pointer-events: none;
-      will-change: transform, opacity;
-      transform: translate3d(${x}px, ${y}px, 0);
-      opacity: 1;
+      position:absolute;
+      width:${size}px;
+      height:${size}px;
+      border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      background:${particleColor};
+      pointer-events:none;
+      will-change:transform,opacity;
+      transform:translate3d(${x}px,${y}px,0);
+      opacity:1;
     `;
     container.appendChild(el);
 
@@ -339,7 +352,8 @@ export function createParticles(
       vy: Math.sin(angle) * speed - 2, // Slight upward bias
       size,
       opacity: 1,
-      color,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10,
       element: el,
     });
   }
@@ -371,9 +385,10 @@ export function createParticles(
       p.vy += GRAVITY;
       p.x += p.vx;
       p.y += p.vy;
+      p.rotation += p.rotationSpeed;
       p.opacity = 1 - easeOutCubic(progress);
 
-      p.element.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
+      p.element.style.transform = `translate3d(${p.x}px,${p.y}px,0) rotate3d(0,0,1,${p.rotation}deg)`;
       p.element.style.opacity = String(p.opacity);
     }
 
@@ -382,7 +397,7 @@ export function createParticles(
 
   rafId = requestAnimationFrame(animate);
 
-  // Safety cleanup
+  // Safety cleanup if animation loop somehow stalls
   setTimeout(cleanup, LIFETIME_MS + 100);
 
   return cleanup;
