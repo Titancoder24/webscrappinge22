@@ -1,0 +1,407 @@
+/* ==========================================================================
+   DataForge Content Script Overlay Styles
+   All overlay UI injected into host pages. GPU-accelerated via transforms.
+   Accent palette: emerald #10B981 / teal #14B8A6
+   ========================================================================== */
+
+/* ---------- Root overlay container ---------- */
+.dataforge-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2147483647;
+  overflow: hidden;
+}
+
+/* ---------- Highlight borders ---------- */
+.dataforge-highlight {
+  position: absolute;
+  border: 2px solid #10B981;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.08);
+  pointer-events: none;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  will-change: opacity, transform;
+}
+
+.dataforge-highlight--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dataforge-highlight--hover {
+  border-color: #14B8A6;
+  background: rgba(20, 184, 166, 0.12);
+  box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.3);
+}
+
+.dataforge-highlight--selected {
+  border-color: #10B981;
+  border-width: 3px;
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Highlight pulse animation for selected elements */
+@keyframes dataforge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  }
+}
+
+.dataforge-highlight--pulse {
+  animation: dataforge-pulse 2s ease-in-out infinite;
+}
+
+/* Element count badge on highlights */
+.dataforge-highlight__badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #10B981;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ---------- Cursor crosshair ---------- */
+.dataforge-cursor-active,
+.dataforge-cursor-active * {
+  cursor: crosshair !important;
+}
+
+/* Pulsing cursor ring */
+.dataforge-cursor-ring {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  margin-top: -16px;
+  border: 2px solid #10B981;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0.8;
+  transform: translate3d(0, 0, 0);
+  animation: dataforge-ring-pulse 1.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes dataforge-ring-pulse {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(0, 0, 0) scale(1.3);
+    opacity: 0.3;
+  }
+}
+
+/* ---------- Floating tooltip ---------- */
+.dataforge-tooltip {
+  position: fixed;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(6, 78, 59, 0.92);
+  color: #d1fae5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0;
+  transform: translate3d(0, 4px, 0);
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+  will-change: opacity, transform;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.dataforge-tooltip--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.dataforge-tooltip__icon {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  vertical-align: middle;
+}
+
+.dataforge-tooltip__count {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+/* ---------- Scanner beam ---------- */
+.dataforge-scanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #10B981 20%,
+    #14B8A6 50%,
+    #10B981 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
+.dataforge-scanner--active {
+  opacity: 1;
+  animation: dataforge-scan 1.8s ease-in-out infinite;
+}
+
+@keyframes dataforge-scan {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 100vh, 0);
+  }
+}
+
+/* ---------- Shockwave on click ---------- */
+.dataforge-shockwave {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border: 2px solid #10B981;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(0.5);
+  animation: dataforge-shockwave 500ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes dataforge-shockwave {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(4);
+    opacity: 0;
+  }
+}
+
+/* ---------- Floating badge ---------- */
+.dataforge-badge {
+  position: fixed;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(6, 78, 59, 0.88);
+  color: #a7f3d0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  will-change: opacity, transform;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dataforge-badge--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.dataforge-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
+}
+
+.dataforge-badge__dot--active {
+  animation: dataforge-dot-blink 1s ease-in-out infinite;
+}
+
+@keyframes dataforge-dot-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ---------- Progress indicator ---------- */
+.dataforge-progress {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(6, 78, 59, 0.92);
+  color: #d1fae5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  will-change: opacity, transform;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.dataforge-progress--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.dataforge-progress__bar {
+  width: 100%;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: rgba(16, 185, 129, 0.2);
+  overflow: hidden;
+}
+
+.dataforge-progress__fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #10B981, #14B8A6);
+  transform-origin: left center;
+  transition: transform 300ms ease-out;
+  will-change: transform;
+}
+
+/* ---------- Selection mode overlay dimming ---------- */
+.dataforge-dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.dataforge-dim--active {
+  opacity: 1;
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .dataforge-highlight {
+    transition: opacity 50ms linear;
+    transform: none;
+  }
+
+  .dataforge-highlight--visible {
+    transform: none;
+  }
+
+  .dataforge-highlight--pulse {
+    animation: none;
+  }
+
+  .dataforge-cursor-ring {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  .dataforge-tooltip {
+    transition: opacity 50ms linear;
+    transform: none;
+  }
+
+  .dataforge-tooltip--visible {
+    transform: none;
+  }
+
+  .dataforge-scanner--active {
+    animation-duration: 5s;
+  }
+
+  .dataforge-shockwave {
+    animation: none;
+    display: none;
+  }
+
+  .dataforge-badge {
+    transition: opacity 50ms linear;
+    transform: none;
+  }
+
+  .dataforge-badge--visible {
+    transform: none;
+  }
+
+  .dataforge-badge__dot--active {
+    animation: none;
+  }
+
+  .dataforge-progress {
+    transition: opacity 50ms linear;
+    transform: none;
+  }
+
+  .dataforge-progress--visible {
+    transform: none;
+  }
+
+  @keyframes dataforge-ring-pulse {
+    0%, 100% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.7;
+    }
+  }
+}

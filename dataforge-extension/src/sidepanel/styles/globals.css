@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/* Base layer overrides                                               */
+/* ------------------------------------------------------------------ */
+
+@layer base {
+  html {
+    @apply antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-forge-bg text-forge-text font-sans m-0 p-0 overflow-hidden;
+    min-width: 320px;
+    min-height: 100vh;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scrollbar-width: thin;
+    scrollbar-color: #1E4D3D transparent;
+  }
+
+  /* Selection color */
+  ::selection {
+    background: rgba(16, 185, 129, 0.3);
+    color: #F0FDF4;
+  }
+
+  /* Focus ring - emerald accent */
+  :focus-visible {
+    outline: 2px solid rgba(16, 185, 129, 0.6);
+    outline-offset: 2px;
+  }
+
+  /* Remove default focus for mouse users */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Component layer utilities                                          */
+/* ------------------------------------------------------------------ */
+
+@layer components {
+  /* Glassmorphism card */
+  .glass-card {
+    @apply bg-forge-surface backdrop-blur-md rounded-xl border border-forge-border;
+  }
+
+  /* Emerald gradient text */
+  .text-gradient-emerald {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #10B981, #14B8A6);
+  }
+
+  /* Emerald gradient background */
+  .bg-gradient-emerald {
+    background: linear-gradient(135deg, #10B981, #14B8A6);
+  }
+
+  /* Emerald glow box-shadow */
+  .glow-emerald {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.25), 0 0 6px rgba(16, 185, 129, 0.15);
+  }
+
+  .glow-emerald-sm {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2), 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  .glow-emerald-lg {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.35), 0 0 10px rgba(16, 185, 129, 0.2);
+  }
+
+  /* Emerald border glow on hover */
+  .border-glow-hover {
+    @apply border border-forge-border transition-all duration-300;
+  }
+
+  .border-glow-hover:hover {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15), inset 0 0 15px rgba(16, 185, 129, 0.05);
+  }
+
+  /* Lift effect */
+  .hover-lift {
+    @apply transition-transform duration-300;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Emerald-themed input */
+  .input-forge {
+    @apply bg-forge-bg-secondary border border-forge-border rounded-lg px-3 py-2 text-sm text-forge-text
+      placeholder:text-forge-text-muted/50
+      focus:border-accent-primary focus:ring-1 focus:ring-accent-primary/30
+      transition-all duration-200;
+  }
+
+  /* Toggle switch base */
+  .toggle-switch {
+    @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full
+      border-2 border-transparent transition-colors duration-200 ease-in-out;
+  }
+
+  .toggle-switch[data-state='checked'] {
+    @apply bg-accent-primary;
+  }
+
+  .toggle-switch[data-state='unchecked'] {
+    @apply bg-forge-bg-tertiary;
+  }
+
+  .toggle-switch-thumb {
+    @apply pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg ring-0
+      transition-transform duration-200 ease-in-out;
+  }
+
+  .toggle-switch[data-state='checked'] .toggle-switch-thumb {
+    transform: translateX(16px);
+  }
+
+  .toggle-switch[data-state='unchecked'] .toggle-switch-thumb {
+    transform: translateX(0px);
+  }
+
+  /* Status badge */
+  .badge-success {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+      bg-status-success/15 text-status-success;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+      bg-status-warning/15 text-status-warning;
+  }
+
+  .badge-error {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+      bg-status-error/15 text-status-error;
+  }
+
+  .badge-info {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+      bg-status-info/15 text-status-info;
+  }
+
+  /* Toast container */
+  .toast-container {
+    @apply fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none;
+  }
+
+  .toast-container > * {
+    @apply pointer-events-auto;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Utility layer extras                                               */
+/* ------------------------------------------------------------------ */
+
+@layer utilities {
+  /* Hide scrollbar but keep scrolling */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Stagger animation delay helpers */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+  .stagger-7 { animation-delay: 350ms; }
+  .stagger-8 { animation-delay: 400ms; }
+
+  /* Backdrop for modals/overlays */
+  .forge-backdrop {
+    background: rgba(10, 15, 13, 0.7);
+    backdrop-filter: blur(4px);
+  }
+}
