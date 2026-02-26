@@ -5,8 +5,8 @@
   "description": "DataForge — The world's most powerful universal web scraper Chrome extension",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch --mode development",
-    "build": "tsc --noEmit && vite build",
+    "dev": "node scripts/build.mjs --watch",
+    "build": "node scripts/build.mjs",
     "preview": "vite preview",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
