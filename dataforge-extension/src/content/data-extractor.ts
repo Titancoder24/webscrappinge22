@@ -2,12 +2,13 @@
  * DataExtractor – Extract structured data from matched elements.
  *
  * Takes a CSS selector and field configurations, extracts text/attributes
- * from all matching elements, resolves relative URLs, and performs basic
- * post-extraction cleaning via CleanSense heuristics.
+ * from all matching elements, resolves relative URLs, and performs
+ * post-extraction cleaning via the CleanSense engine.
  */
 
-import type { DetectedField, Row } from '../../types/extraction';
-import { generatePrefixedId } from '../../utils/id';
+import type { DetectedField, Row } from '../types/extraction';
+import { generatePrefixedId } from '../utils/id';
+import { cleanValue as cleanSenseValue } from './engines/clean-sense';
 
 export interface ExtractDataOptions {
   /** Base URL for resolving relative URLs (defaults to current page). */
@@ -360,52 +361,28 @@ function extractPhone(el: Element): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// CleanSense – post-extraction cleaning
+// CleanSense integration – post-extraction cleaning
 // ---------------------------------------------------------------------------
 
 function cleanValue(value: string | number | null, dataType: string): string | number | null {
   if (value === null || value === undefined) return null;
-
   if (typeof value === 'number') return value;
 
-  let cleaned = value;
-
-  // Remove zero-width and invisible characters
-  cleaned = cleaned.replace(/[\u200B\u200C\u200D\uFEFF\u00AD]/g, '');
-
-  // Normalize whitespace (collapse multiple spaces/newlines)
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-  // Remove common unwanted prefixes/suffixes based on type
-  switch (dataType) {
-    case 'price':
-      // Remove "Price:" or "Cost:" prefixes
-      cleaned = cleaned.replace(/^(?:price|cost|was|now)\s*:\s*/i, '');
-      break;
-
-    case 'email':
-      // Remove mailto: prefix
-      cleaned = cleaned.replace(/^mailto:/i, '');
-      break;
-
-    case 'phone':
-      // Clean phone formatting
-      cleaned = cleaned.replace(/^(?:tel|phone|call)\s*:\s*/i, '');
-      break;
-
-    case 'url':
-      // Trim trailing punctuation that may have been included
-      cleaned = cleaned.replace(/[,;.!?)]+$/, '');
-      break;
-
-    case 'rating':
-      // Normalize rating text
-      cleaned = cleaned.replace(/\s*stars?\s*$/i, '');
-      break;
+  try {
+    // Delegate to the CleanSense engine for thorough, type-aware cleaning
+    const cleaned = cleanSenseValue(
+      value,
+      dataType as import('../types/extraction').DataType,
+      window.location.href,
+    );
+    return cleaned || null;
+  } catch {
+    // Fallback: basic cleaning if CleanSense fails
+    let cleaned = value;
+    cleaned = cleaned.replace(/[\u200B\u200C\u200D\uFEFF\u00AD]/g, '');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    return cleaned || null;
   }
-
-  // Return null for empty strings
-  return cleaned || null;
 }
 
 // ---------------------------------------------------------------------------

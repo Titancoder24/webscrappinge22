@@ -7,7 +7,7 @@
  * data extraction, scrolling, and pagination.
  */
 
-import type { Message } from '../../types/messages';
+import type { Message } from '../types/messages';
 import type {
   DetectedField,
   DetectedPattern,
@@ -16,9 +16,9 @@ import type {
   ExtractionSummary,
   PaginationConfig,
   Row,
-} from '../../types/extraction';
+} from '../types/extraction';
 
-import { generatePrefixedId } from '../../utils/id';
+import { generatePrefixedId } from '../utils/id';
 import { ElementHighlighter } from './element-highlighter';
 import { CursorController } from './cursor-controller';
 import { extractData } from './data-extractor';
@@ -26,6 +26,9 @@ import { ScrollController } from './scroll-controller';
 import { PaginationExecutor } from './pagination-executor';
 import { DOMWalker } from './dom-walker';
 import { DOMChangeWatcher } from './mutation-observer';
+import { detectPagination as pageSenseDetect } from './engines/page-sense';
+import { classifyField } from './engines/type-sense';
+import { generateRelativeSelector } from './engines/selector-forge';
 
 // ---------------------------------------------------------------------------
 // Extraction state machine
@@ -373,19 +376,28 @@ function detectFields(sampleEl: Element): DetectedField[] {
     // Text content fields
     const text = getDirectText(target);
     if (text && text.length > 1 && text.length < 500) {
-      const dataType = inferDataType(text, target);
-      const name = inferFieldName(target, dataType, fields.length);
+      // Use TypeSense for accurate field classification
+      const classification = classifyField([text], target);
+      const name = classification.suggestedName || inferFieldName(target, classification.dataType, fields.length);
+      const fieldName = name.toLowerCase().replace(/\s+/g, '_');
 
-      if (!seen.has(name)) {
-        seen.add(name);
-        const relSelector = buildRelativeSelector(sampleEl, target);
+      if (!seen.has(fieldName)) {
+        seen.add(fieldName);
+        // Use SelectorForge for robust relative selectors
+        let relSelector: string;
+        try {
+          relSelector = generateRelativeSelector(target, sampleEl) || buildRelativeSelector(sampleEl, target);
+        } catch {
+          relSelector = buildRelativeSelector(sampleEl, target);
+        }
+
         fields.push({
           id: generatePrefixedId('fld'),
-          name,
+          name: fieldName,
           relativeSelector: relSelector,
           sampleValues: [text.slice(0, 100)],
-          dataType,
-          confidence: 0.7,
+          dataType: classification.dataType,
+          confidence: classification.confidence,
           enabled: true,
         });
       }
@@ -396,10 +408,16 @@ function detectFields(sampleEl: Element): DetectedField[] {
       const name = 'url';
       if (!seen.has(name)) {
         seen.add(name);
+        let relSelector: string;
+        try {
+          relSelector = generateRelativeSelector(target, sampleEl) || buildRelativeSelector(sampleEl, target);
+        } catch {
+          relSelector = buildRelativeSelector(sampleEl, target);
+        }
         fields.push({
           id: generatePrefixedId('fld'),
           name,
-          relativeSelector: buildRelativeSelector(sampleEl, target),
+          relativeSelector: relSelector,
           sampleValues: [target.getAttribute('href')!.slice(0, 100)],
           dataType: 'url',
           confidence: 0.9,
@@ -415,10 +433,16 @@ function detectFields(sampleEl: Element): DetectedField[] {
         const name = 'image';
         if (!seen.has(name)) {
           seen.add(name);
+          let relSelector: string;
+          try {
+            relSelector = generateRelativeSelector(target, sampleEl) || buildRelativeSelector(sampleEl, target);
+          } catch {
+            relSelector = buildRelativeSelector(sampleEl, target);
+          }
           fields.push({
             id: generatePrefixedId('fld'),
             name,
-            relativeSelector: buildRelativeSelector(sampleEl, target),
+            relativeSelector: relSelector,
             sampleValues: [src.slice(0, 100)],
             dataType: 'image',
             confidence: 0.9,
@@ -450,32 +474,6 @@ function getDirectText(el: Element): string {
   return text;
 }
 
-function inferDataType(text: string, el: Element): DetectedField['dataType'] {
-  // Email
-  if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(text)) return 'email';
-
-  // URL
-  if (/^https?:\/\//.test(text)) return 'url';
-
-  // Price
-  if (/^[£$€¥₹]\s*[\d,]+\.?\d{0,2}$/.test(text) || /^\d+[.,]\d{2}\s*[£$€¥₹]$/.test(text)) return 'price';
-
-  // Rating
-  if (/^\d(\.\d)?\s*\/\s*\d/.test(text)) return 'rating';
-  if (el.getAttribute('aria-label')?.toLowerCase().includes('star')) return 'rating';
-
-  // Phone
-  if (/^[+]?[\d\s()-]{7,}$/.test(text)) return 'phone';
-
-  // Number
-  if (/^-?[\d,]+\.?\d*$/.test(text.replace(/\s/g, ''))) return 'number';
-
-  // Date (basic heuristic)
-  if (/\d{1,4}[-/]\d{1,2}[-/]\d{1,4}/.test(text)) return 'date';
-  if (el.tagName === 'TIME') return 'date';
-
-  return 'text';
-}
 
 function inferFieldName(el: Element, dataType: string, index: number): string {
   // Try aria-label
@@ -981,7 +979,9 @@ function handleDeactivateSelectionMode(sendResponse: (resp: unknown) => void): v
 
 async function handleDetectPagination(sendResponse: (resp: unknown) => void): Promise<void> {
   try {
-    const configs = runPageSense();
+    // Delegate to the full PageSense engine for comprehensive detection
+    const configs = pageSenseDetect(document);
+
     sendResponse({
       type: 'PAGINATION_RESULT',
       configs,
@@ -994,243 +994,6 @@ async function handleDetectPagination(sendResponse: (resp: unknown) => void): Pr
   }
 }
 
-/**
- * PageSense – Detect pagination mechanisms on the current page.
- */
-function runPageSense(): PaginationConfig[] {
-  const configs: PaginationConfig[] = [];
-
-  // 1. Detect "Next" button/link
-  const nextConfig = detectNextButton();
-  if (nextConfig) configs.push(nextConfig);
-
-  // 2. Detect "Load More" button
-  const loadMoreConfig = detectLoadMore();
-  if (loadMoreConfig) configs.push(loadMoreConfig);
-
-  // 3. Detect URL pattern pagination
-  const urlConfig = detectUrlPattern();
-  if (urlConfig) configs.push(urlConfig);
-
-  // 4. Always offer auto-scroll as a fallback
-  configs.push({
-    mode: 'auto-scroll',
-    maxPages: 50,
-    delayMs: 1000,
-    scrollSpeed: 'medium',
-    confidence: 0.5,
-  });
-
-  return configs;
-}
-
-function detectNextButton(): PaginationConfig | null {
-  // Common "Next" button selectors
-  const selectors = [
-    'a[rel="next"]',
-    '[aria-label*="next" i]',
-    '[aria-label*="Next"]',
-    'a.next',
-    'button.next',
-    '.pagination a:last-child',
-    '.pager .next a',
-    'nav[aria-label*="pagination" i] a:last-child',
-    'a[class*="next"]',
-    'button[class*="next"]',
-    'li.next a',
-    '.nav-next a',
-  ];
-
-  for (const selector of selectors) {
-    try {
-      const el = document.querySelector(selector);
-      if (el && isClickable(el)) {
-        return {
-          mode: 'click-next',
-          selector,
-          maxPages: 50,
-          delayMs: 1500,
-          confidence: 0.8,
-        };
-      }
-    } catch {
-      // Invalid selector
-    }
-  }
-
-  // Heuristic: look for links/buttons containing "Next" text
-  const candidates = document.querySelectorAll('a, button');
-  for (let i = 0; i < candidates.length; i++) {
-    const el = candidates[i];
-    const text = (el.textContent || '').trim().toLowerCase();
-    if ((text === 'next' || text === 'next page' || text === '>' || text === '\u203A' || text === '\u00BB') && isClickable(el)) {
-      const selector = buildUniqueSelector(el);
-      if (selector) {
-        return {
-          mode: 'click-next',
-          selector,
-          maxPages: 50,
-          delayMs: 1500,
-          confidence: 0.7,
-        };
-      }
-    }
-  }
-
-  return null;
-}
-
-function detectLoadMore(): PaginationConfig | null {
-  const selectors = [
-    'button[class*="load-more"]',
-    'button[class*="loadMore"]',
-    'a[class*="load-more"]',
-    '[class*="show-more"]',
-    '[data-action="load-more"]',
-  ];
-
-  for (const selector of selectors) {
-    try {
-      const el = document.querySelector(selector);
-      if (el && isClickable(el)) {
-        return {
-          mode: 'load-more',
-          selector,
-          maxPages: 100,
-          delayMs: 1500,
-          confidence: 0.8,
-        };
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  // Heuristic: buttons containing "Load More" or "Show More" text
-  const candidates = document.querySelectorAll('button, a');
-  for (let i = 0; i < candidates.length; i++) {
-    const el = candidates[i];
-    const text = (el.textContent || '').trim().toLowerCase();
-    if ((text.includes('load more') || text.includes('show more') || text.includes('view more')) && isClickable(el)) {
-      const selector = buildUniqueSelector(el);
-      if (selector) {
-        return {
-          mode: 'load-more',
-          selector,
-          maxPages: 100,
-          delayMs: 1500,
-          confidence: 0.7,
-        };
-      }
-    }
-  }
-
-  return null;
-}
-
-function detectUrlPattern(): PaginationConfig | null {
-  const url = window.location.href;
-
-  // Check for common page number patterns in the URL
-  const patterns = [
-    { regex: /([?&])page=(\d+)/, replacement: '$1page={page}' },
-    { regex: /([?&])p=(\d+)/, replacement: '$1p={page}' },
-    { regex: /\/page\/(\d+)/, replacement: '/page/{page}' },
-    { regex: /([?&])offset=(\d+)/, replacement: '$1offset={offset}' },
-    { regex: /([?&])start=(\d+)/, replacement: '$1start={offset}' },
-  ];
-
-  for (const { regex, replacement } of patterns) {
-    if (regex.test(url)) {
-      const urlPattern = url.replace(regex, replacement);
-      return {
-        mode: 'url-pattern',
-        urlPattern,
-        maxPages: 50,
-        delayMs: 2000,
-        confidence: 0.75,
-      };
-    }
-  }
-
-  // Check pagination links for URL patterns
-  const paginationLinks = document.querySelectorAll('.pagination a, nav[aria-label*="page" i] a, .pager a');
-  for (let i = 0; i < paginationLinks.length; i++) {
-    const href = paginationLinks[i].getAttribute('href');
-    if (!href) continue;
-
-    for (const { regex, replacement } of patterns) {
-      const fullUrl = new URL(href, window.location.origin).href;
-      if (regex.test(fullUrl)) {
-        const urlPattern = fullUrl.replace(regex, replacement);
-        return {
-          mode: 'url-pattern',
-          urlPattern,
-          maxPages: 50,
-          delayMs: 2000,
-          confidence: 0.7,
-        };
-      }
-    }
-  }
-
-  return null;
-}
-
-function isClickable(el: Element): boolean {
-  try {
-    const style = getComputedStyle(el);
-    if (style.display === 'none' || style.visibility === 'hidden') return false;
-    if (parseFloat(style.opacity) === 0) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  } catch {
-    return false;
-  }
-}
-
-function buildUniqueSelector(el: Element): string | null {
-  // Try data attributes
-  const attrs = el.getAttributeNames();
-  for (const attr of attrs) {
-    if (attr.startsWith('data-') && attr !== 'data-reactid') {
-      const val = el.getAttribute(attr);
-      if (val) {
-        const sel = `${el.tagName.toLowerCase()}[${attr}="${CSS.escape(val)}"]`;
-        try {
-          if (document.querySelectorAll(sel).length === 1) return sel;
-        } catch {
-          // ignore
-        }
-      }
-    }
-  }
-
-  // Try aria-label
-  const ariaLabel = el.getAttribute('aria-label');
-  if (ariaLabel) {
-    const sel = `[aria-label="${CSS.escape(ariaLabel)}"]`;
-    try {
-      if (document.querySelectorAll(sel).length === 1) return sel;
-    } catch {
-      // ignore
-    }
-  }
-
-  // Try class combination
-  const tag = el.tagName.toLowerCase();
-  const classes = Array.from(el.classList).filter(c => c.length < 30).slice(0, 3);
-  if (classes.length > 0) {
-    const sel = `${tag}.${classes.map(c => CSS.escape(c)).join('.')}`;
-    try {
-      if (document.querySelectorAll(sel).length === 1) return sel;
-    } catch {
-      // ignore
-    }
-  }
-
-  return null;
-}
 
 // ---------------------------------------------------------------------------
 // EXTRACT_EMAILS – Dedicated email extraction

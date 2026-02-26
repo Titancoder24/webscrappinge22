@@ -12,7 +12,7 @@
  * Each mode yields batches of new elements via an async iterator.
  */
 
-import type { PaginationConfig } from '../../types/extraction';
+import type { PaginationConfig } from '../types/extraction';
 import { ScrollController } from './scroll-controller';
 import { DOMChangeWatcher } from './mutation-observer';
 

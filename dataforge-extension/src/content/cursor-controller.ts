@@ -6,7 +6,7 @@
  * pattern detection info, and fires ELEMENT_CLICKED on click.
  */
 
-import type { Message } from '../../types/messages';
+import type { Message } from '../types/messages';
 import { ElementHighlighter } from './element-highlighter';
 
 /** Minimum interval between hover detections (ms). */
