@@ -14,7 +14,6 @@ import type {
   ExtractionConfig,
   ExtractionProgress,
   ExtractionSummary,
-  PaginationConfig,
   Row,
 } from '../types/extraction';
 
