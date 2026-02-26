@@ -184,7 +184,7 @@ class MiniZip {
     const eocd = this.buildEOCD(this.files.length, cdSize, cdOffset);
     parts.push(eocd);
 
-    return new Blob(parts, {
+    return new Blob(parts as BlobPart[], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
   }
