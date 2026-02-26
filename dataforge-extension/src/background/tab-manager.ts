@@ -9,7 +9,7 @@
  * Active tab state is recovered by querying chrome.tabs on init.
  */
 
-import type { ExtractionConfig, Row, ExtractionSummary } from '../types/extraction';
+import type { ExtractionConfig, Row } from '../types/extraction';
 import type { Message } from '../types/messages';
 import { generatePrefixedId } from '../utils/id';
 

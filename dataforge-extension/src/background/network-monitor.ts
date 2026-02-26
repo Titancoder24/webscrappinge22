@@ -16,7 +16,6 @@
  */
 
 import type { PaginationConfig } from '../types/extraction';
-import type { Message } from '../types/messages';
 
 // ---------------------------------------------------------------------------
 // Types
