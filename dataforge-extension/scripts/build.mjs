@@ -134,13 +134,7 @@ await build({
 });
 
 // ─── Copy static files ──────────────────────────────────────────────────
-console.log('📋 Copying manifest.json and icons...');
-
-// manifest.json
-copyFileSync(
-  resolve(ROOT, 'manifest.json'),
-  resolve(DIST, 'manifest.json'),
-);
+console.log('📋 Copying icons and CSS...');
 
 // Copy content overlay CSS (in case not emitted by the build)
 const contentCssPath = resolve(DIST, 'content-styles.css');
@@ -163,5 +157,5 @@ if (existsSync(srcIcons)) {
   }
 }
 
-console.log('\n✅ Build complete! Extension is in dist/');
-console.log('   Load it in Chrome: chrome://extensions → Load unpacked → select dist/');
+console.log('\n✅ Build complete!');
+console.log('   Load in Chrome: chrome://extensions → Load unpacked → select dataforge-extension/');
