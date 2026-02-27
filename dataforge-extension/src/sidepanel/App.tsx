@@ -25,6 +25,14 @@ import ToolsMenu from './components/tools/ToolsMenu';
 import HistoryView from './components/history/HistoryView';
 import SettingsView from './components/settings/SettingsView';
 
+// Tool views
+import ListExtractorView from './components/tools/list-extractor/ListExtractorView';
+import PageExtractorView from './components/tools/page-extractor/PageExtractorView';
+import EmailExtractorView from './components/tools/email-extractor/EmailExtractorView';
+import ImageDownloaderView from './components/tools/image-downloader/ImageDownloaderView';
+import TextExtractorView from './components/tools/text-extractor/TextExtractorView';
+import TemplatesView from './components/tools/templates/TemplatesView';
+
 // ---------------------------------------------------------------------------
 // Error Boundary
 // ---------------------------------------------------------------------------
@@ -220,47 +228,27 @@ const ToastContainer: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
-// Tool View Placeholder
+// Tool View Router
 // ---------------------------------------------------------------------------
 
-/**
- * Placeholder for individual tool views that haven't been implemented yet.
- * In production, this would route to the specific tool component.
- */
-const ToolViewPlaceholder: React.FC<{ tool: ToolType }> = ({ tool }) => {
-  const setActiveTool = useStore((s) => s.setTool);
-
-  const toolNames: Record<ToolType, string> = {
-    'list-extractor': 'List Extractor',
-    'page-extractor': 'Page Extractor',
-    'email-extractor': 'Email Extractor',
-    'image-downloader': 'Image Downloader',
-    'text-extractor': 'Text Extractor',
-    'templates': 'Templates',
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-      <h3 className="text-sm font-semibold text-forge-text mb-1">
-        {toolNames[tool] || tool}
-      </h3>
-      <p className="text-xs text-forge-text-muted mb-4">
-        This tool view is being loaded...
-      </p>
-      <button
-        type="button"
-        onClick={() => setActiveTool('list-extractor')}
-        className={[
-          'h-8 px-4 rounded-lg text-xs font-medium',
-          'text-accent-primary border border-accent-primary/40',
-          'hover:bg-accent-primary/10',
-          'transition-all duration-150 motion-reduce:transition-none',
-        ].join(' ')}
-      >
-        Back to Tools
-      </button>
-    </div>
-  );
+/** Routes to the correct tool view component based on the active tool. */
+const ToolViewRouter: React.FC<{ tool: ToolType }> = ({ tool }) => {
+  switch (tool) {
+    case 'list-extractor':
+      return <ListExtractorView />;
+    case 'page-extractor':
+      return <PageExtractorView />;
+    case 'email-extractor':
+      return <EmailExtractorView />;
+    case 'image-downloader':
+      return <ImageDownloaderView />;
+    case 'text-extractor':
+      return <TextExtractorView />;
+    case 'templates':
+      return <TemplatesView />;
+    default:
+      return <ToolsMenu />;
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -375,7 +363,7 @@ const App: React.FC = () => {
       case 'tools':
         // If a specific tool is selected, show its view; otherwise show the menu
         if (activeTool) {
-          return <ToolViewPlaceholder tool={activeTool} />;
+          return <ToolViewRouter tool={activeTool} />;
         }
         return <ToolsMenu />;
 
