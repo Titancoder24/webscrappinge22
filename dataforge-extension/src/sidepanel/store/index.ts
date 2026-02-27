@@ -94,7 +94,7 @@ export async function initializeStore(): Promise<void> {
 // Re-exports for convenience
 // ---------------------------------------------------------------------------
 
-export type { ExtractionSlice, ListExtractorStep } from './extraction-slice';
+export type { ExtractionSlice, ListExtractorStep, SpeedEntry } from './extraction-slice';
 export { STEP_LABELS } from './extraction-slice';
 export type { TableSlice } from './table-slice';
 export type { UISlice, NavigationTab, Toast, ModalState } from './ui-slice';

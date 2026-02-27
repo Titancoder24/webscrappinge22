@@ -4,7 +4,8 @@
  * Manages the lifecycle of a data extraction operation:
  * idle → selecting → configuring → running/paused → completed/error
  *
- * Also manages the List Extractor wizard steps and shared UI state
+ * Also manages the List Extractor wizard steps, selector refinement,
+ * field mapping, pagination config, speed tracking, and shared UI state
  * (error, scanning) used by multiple tool views and hooks.
  */
 
@@ -15,8 +16,12 @@ import type {
   ExtractionProgress,
   ExtractionSummary,
   DetectedPattern,
+  DetectedField,
+  PaginationConfig as PaginationConfigType,
+  PaginationMode,
   Row,
 } from '../../types/extraction';
+import type { SelectorPath } from '../../types/selector';
 import type { StoreState } from './index';
 import { generatePrefixedId } from '../../utils/id';
 
@@ -32,6 +37,26 @@ export const STEP_LABELS: Record<ListExtractorStep, string> = {
   1: 'Map Columns',
   2: 'Pagination',
   3: 'Run & Results',
+};
+
+// ---------------------------------------------------------------------------
+// Speed entry type
+// ---------------------------------------------------------------------------
+
+export interface SpeedEntry {
+  timestamp: number;
+  itemsPerSec: number;
+}
+
+// ---------------------------------------------------------------------------
+// Default pagination config
+// ---------------------------------------------------------------------------
+
+const defaultPaginationConfig: PaginationConfigType = {
+  mode: 'auto-scroll',
+  maxPages: 50,
+  delayMs: 1000,
+  confidence: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -74,13 +99,31 @@ export interface ExtractionSlice {
 
   // -- List Extractor wizard state ------------------------------------------
 
-  /** Current list extractor step. */
   currentStep: ListExtractorStep;
-
-  /** Set of completed wizard steps. */
   completedSteps: Set<ListExtractorStep>;
 
-  // -- Aliases (used by components) -------------------------------------------
+  // -- Selection mode state -------------------------------------------------
+
+  selectionMode: boolean;
+  selectorPath: SelectorPath | null;
+  manualSelector: string;
+  matchCount: number;
+
+  // -- Field mapping state --------------------------------------------------
+
+  fields: DetectedField[];
+
+  // -- Pagination config state ----------------------------------------------
+
+  detectedPaginationConfigs: PaginationConfigType[];
+  selectedPaginationMode: PaginationMode | null;
+  paginationConfig: PaginationConfigType;
+
+  // -- Speed tracking -------------------------------------------------------
+
+  speedHistory: SpeedEntry[];
+
+  // -- Aliases --------------------------------------------------------------
   extractionStatus: ExtractionStatus;
   extractionProgress: ExtractionProgress;
 
@@ -102,28 +145,31 @@ export interface ExtractionSlice {
   setStep: (step: number) => void;
   pauseExtraction: () => void;
   resumeExtraction: () => void;
-
-  /** Set scanning state. */
   setIsScanning: (scanning: boolean) => void;
-
-  /** Set error message. */
   setError: (error: string | null) => void;
-
-  /** Set extraction summary. */
   setExtractionSummary: (summary: ExtractionSummary) => void;
-
-  /** Build extraction config from current state. */
   buildExtractionConfig: () => ExtractionConfig;
-
-  /** Reset the list extractor to initial state. */
   resetListExtractor: () => void;
-
-  // -- Wizard step navigation -----------------------------------------------
-
   goToStep: (step: ListExtractorStep) => void;
   nextStep: () => void;
   prevStep: () => void;
   markStepCompleted: (step: ListExtractorStep) => void;
+  setSelectionMode: (mode: boolean) => void;
+  setSelectorPath: (path: SelectorPath | null) => void;
+  setManualSelector: (selector: string) => void;
+  setMatchCount: (count: number) => void;
+  setFields: (fields: DetectedField[]) => void;
+  toggleField: (fieldId: string) => void;
+  renameField: (fieldId: string, name: string) => void;
+  removeField: (fieldId: string) => void;
+  reorderFields: (fieldIds: string[]) => void;
+  addCustomField: (field: DetectedField) => void;
+  setDetectedPaginationConfigs: (configs: PaginationConfigType[]) => void;
+  selectPaginationMode: (mode: PaginationMode) => void;
+  setPaginationConfig: (config: PaginationConfigType) => void;
+  updatePaginationConfig: (partial: Partial<PaginationConfigType>) => void;
+  addSpeedEntry: (entry: SpeedEntry) => void;
+  clearSpeedHistory: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -164,6 +210,15 @@ export const createExtractionSlice: StateCreator<
   extractionSummary: null,
   currentStep: 0 as ListExtractorStep,
   completedSteps: new Set<ListExtractorStep>(),
+  selectionMode: false,
+  selectorPath: null,
+  manualSelector: '',
+  matchCount: 0,
+  fields: [],
+  detectedPaginationConfigs: [],
+  selectedPaginationMode: null,
+  paginationConfig: { ...defaultPaginationConfig },
+  speedHistory: [],
 
   // -- Actions ---------------------------------------------------------------
 
@@ -237,6 +292,15 @@ export const createExtractionSlice: StateCreator<
         extractionSummary: null,
         currentStep: 0 as ListExtractorStep,
         completedSteps: new Set<ListExtractorStep>(),
+        selectionMode: false,
+        selectorPath: null,
+        manualSelector: '',
+        matchCount: 0,
+        fields: [],
+        detectedPaginationConfigs: [],
+        selectedPaginationMode: null,
+        paginationConfig: { ...defaultPaginationConfig },
+        speedHistory: [],
       },
       false,
       'extraction/reset',
@@ -248,8 +312,18 @@ export const createExtractionSlice: StateCreator<
   setDetectedPatterns: (patterns) =>
     set({ detectedPatterns: patterns }, false, 'extraction/setPatterns'),
 
-  selectPattern: (patternId) =>
-    set({ selectedPatternId: patternId }, false, 'extraction/selectPattern'),
+  selectPattern: (patternId) => {
+    const state = get();
+    const pattern = state.detectedPatterns.find((p) => p.id === patternId);
+    set(
+      {
+        selectedPatternId: patternId,
+        fields: pattern?.fields ?? state.fields,
+      },
+      false,
+      'extraction/selectPattern',
+    );
+  },
 
   setStep: (step) =>
     set({ activeStep: Math.max(0, Math.min(3, step)) }, false, 'extraction/setStep'),
@@ -295,17 +369,12 @@ export const createExtractionSlice: StateCreator<
 
     return {
       id: generatePrefixedId('exc'),
-      patternSelector: selectedPattern?.selector ?? '',
-      fields: selectedPattern?.fields ?? [],
-      pagination: {
-        mode: 'auto-scroll',
-        maxPages: state.settings.extraction.defaultMaxPages,
-        delayMs: state.settings.extraction.defaultDelay,
-        confidence: 0,
-      },
+      patternSelector: selectedPattern?.selector ?? state.manualSelector,
+      fields: state.fields.filter((f) => f.enabled),
+      pagination: { ...state.paginationConfig },
       maxItems: state.settings.extraction.defaultMaxItems,
-      maxPages: state.settings.extraction.defaultMaxPages,
-      delayBetweenPages: state.settings.extraction.defaultDelay,
+      maxPages: state.paginationConfig.maxPages,
+      delayBetweenPages: state.paginationConfig.delayMs,
     };
   },
 
@@ -326,6 +395,15 @@ export const createExtractionSlice: StateCreator<
         extractionSummary: null,
         currentStep: 0 as ListExtractorStep,
         completedSteps: new Set<ListExtractorStep>(),
+        selectionMode: false,
+        selectorPath: null,
+        manualSelector: '',
+        matchCount: 0,
+        fields: [],
+        detectedPaginationConfigs: [],
+        selectedPaginationMode: null,
+        paginationConfig: { ...defaultPaginationConfig },
+        speedHistory: [],
       },
       false,
       'extraction/resetListExtractor',
@@ -366,4 +444,124 @@ export const createExtractionSlice: StateCreator<
       false,
       'extraction/markStepCompleted',
     ),
+
+  // -- Selection mode actions -----------------------------------------------
+
+  setSelectionMode: (mode) =>
+    set({ selectionMode: mode }, false, 'extraction/setSelectionMode'),
+
+  setSelectorPath: (path) =>
+    set({ selectorPath: path }, false, 'extraction/setSelectorPath'),
+
+  setManualSelector: (selector) =>
+    set({ manualSelector: selector }, false, 'extraction/setManualSelector'),
+
+  setMatchCount: (count) =>
+    set({ matchCount: count }, false, 'extraction/setMatchCount'),
+
+  // -- Field mapping actions ------------------------------------------------
+
+  setFields: (fields) =>
+    set({ fields }, false, 'extraction/setFields'),
+
+  toggleField: (fieldId) =>
+    set(
+      (state) => ({
+        fields: state.fields.map((f) =>
+          f.id === fieldId ? { ...f, enabled: !f.enabled } : f,
+        ),
+      }),
+      false,
+      'extraction/toggleField',
+    ),
+
+  renameField: (fieldId, name) =>
+    set(
+      (state) => ({
+        fields: state.fields.map((f) =>
+          f.id === fieldId ? { ...f, name } : f,
+        ),
+      }),
+      false,
+      'extraction/renameField',
+    ),
+
+  removeField: (fieldId) =>
+    set(
+      (state) => ({
+        fields: state.fields.filter((f) => f.id !== fieldId),
+      }),
+      false,
+      'extraction/removeField',
+    ),
+
+  reorderFields: (fieldIds) =>
+    set(
+      (state) => {
+        const fieldMap = new Map(state.fields.map((f) => [f.id, f]));
+        const reordered: DetectedField[] = [];
+        for (const id of fieldIds) {
+          const field = fieldMap.get(id);
+          if (field) reordered.push(field);
+        }
+        for (const field of state.fields) {
+          if (!fieldIds.includes(field.id)) {
+            reordered.push(field);
+          }
+        }
+        return { fields: reordered };
+      },
+      false,
+      'extraction/reorderFields',
+    ),
+
+  addCustomField: (field) =>
+    set(
+      (state) => ({
+        fields: [...state.fields, field],
+      }),
+      false,
+      'extraction/addCustomField',
+    ),
+
+  // -- Pagination actions ---------------------------------------------------
+
+  setDetectedPaginationConfigs: (configs) =>
+    set({ detectedPaginationConfigs: configs }, false, 'extraction/setDetectedPaginationConfigs'),
+
+  selectPaginationMode: (mode) =>
+    set(
+      (state) => ({
+        selectedPaginationMode: mode,
+        paginationConfig: { ...state.paginationConfig, mode },
+      }),
+      false,
+      'extraction/selectPaginationMode',
+    ),
+
+  setPaginationConfig: (config) =>
+    set({ paginationConfig: config }, false, 'extraction/setPaginationConfig'),
+
+  updatePaginationConfig: (partial) =>
+    set(
+      (state) => ({
+        paginationConfig: { ...state.paginationConfig, ...partial },
+      }),
+      false,
+      'extraction/updatePaginationConfig',
+    ),
+
+  // -- Speed tracking actions -----------------------------------------------
+
+  addSpeedEntry: (entry) =>
+    set(
+      (state) => ({
+        speedHistory: [...state.speedHistory.slice(-59), entry],
+      }),
+      false,
+      'extraction/addSpeedEntry',
+    ),
+
+  clearSpeedHistory: () =>
+    set({ speedHistory: [] }, false, 'extraction/clearSpeedHistory'),
 });

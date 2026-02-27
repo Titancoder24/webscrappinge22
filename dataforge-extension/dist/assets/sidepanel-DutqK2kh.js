@@ -956,6 +956,12 @@ const STEP_LABELS$1 = {
   2: "Pagination",
   3: "Run & Results"
 };
+const defaultPaginationConfig = {
+  mode: "auto-scroll",
+  maxPages: 50,
+  delayMs: 1e3,
+  confidence: 0
+};
 const initialProgress = {
   items: 0,
   pages: 0,
@@ -980,6 +986,15 @@ const createExtractionSlice = (set, get) => ({
   extractionSummary: null,
   currentStep: 0,
   completedSteps: /* @__PURE__ */ new Set(),
+  selectionMode: false,
+  selectorPath: null,
+  manualSelector: "",
+  matchCount: 0,
+  fields: [],
+  detectedPaginationConfigs: [],
+  selectedPaginationMode: null,
+  paginationConfig: { ...defaultPaginationConfig },
+  speedHistory: [],
   // -- Actions ---------------------------------------------------------------
   setStatus: (status) => set({ status, extractionStatus: status }, false, "extraction/setStatus"),
   setExtractionStatus: (status) => set({ status, extractionStatus: status }, false, "extraction/setStatus"),
@@ -1031,14 +1046,34 @@ const createExtractionSlice = (set, get) => ({
       error: null,
       extractionSummary: null,
       currentStep: 0,
-      completedSteps: /* @__PURE__ */ new Set()
+      completedSteps: /* @__PURE__ */ new Set(),
+      selectionMode: false,
+      selectorPath: null,
+      manualSelector: "",
+      matchCount: 0,
+      fields: [],
+      detectedPaginationConfigs: [],
+      selectedPaginationMode: null,
+      paginationConfig: { ...defaultPaginationConfig },
+      speedHistory: []
     },
     false,
     "extraction/reset"
   ),
   setPatterns: (patterns) => set({ detectedPatterns: patterns }, false, "extraction/setPatterns"),
   setDetectedPatterns: (patterns) => set({ detectedPatterns: patterns }, false, "extraction/setPatterns"),
-  selectPattern: (patternId) => set({ selectedPatternId: patternId }, false, "extraction/selectPattern"),
+  selectPattern: (patternId) => {
+    const state = get();
+    const pattern = state.detectedPatterns.find((p) => p.id === patternId);
+    set(
+      {
+        selectedPatternId: patternId,
+        fields: pattern?.fields ?? state.fields
+      },
+      false,
+      "extraction/selectPattern"
+    );
+  },
   setStep: (step) => set({ activeStep: Math.max(0, Math.min(3, step)) }, false, "extraction/setStep"),
   pauseExtraction: () => set(
     (state) => ({
@@ -1069,17 +1104,12 @@ const createExtractionSlice = (set, get) => ({
     }
     return {
       id: generatePrefixedId("exc"),
-      patternSelector: selectedPattern?.selector ?? "",
-      fields: selectedPattern?.fields ?? [],
-      pagination: {
-        mode: "auto-scroll",
-        maxPages: state.settings.extraction.defaultMaxPages,
-        delayMs: state.settings.extraction.defaultDelay,
-        confidence: 0
-      },
+      patternSelector: selectedPattern?.selector ?? state.manualSelector,
+      fields: state.fields.filter((f) => f.enabled),
+      pagination: { ...state.paginationConfig },
       maxItems: state.settings.extraction.defaultMaxItems,
-      maxPages: state.settings.extraction.defaultMaxPages,
-      delayBetweenPages: state.settings.extraction.defaultDelay
+      maxPages: state.paginationConfig.maxPages,
+      delayBetweenPages: state.paginationConfig.delayMs
     };
   },
   resetListExtractor: () => set(
@@ -1097,7 +1127,16 @@ const createExtractionSlice = (set, get) => ({
       error: null,
       extractionSummary: null,
       currentStep: 0,
-      completedSteps: /* @__PURE__ */ new Set()
+      completedSteps: /* @__PURE__ */ new Set(),
+      selectionMode: false,
+      selectorPath: null,
+      manualSelector: "",
+      matchCount: 0,
+      fields: [],
+      detectedPaginationConfigs: [],
+      selectedPaginationMode: null,
+      paginationConfig: { ...defaultPaginationConfig },
+      speedHistory: []
     },
     false,
     "extraction/resetListExtractor"
@@ -1128,7 +1167,91 @@ const createExtractionSlice = (set, get) => ({
     },
     false,
     "extraction/markStepCompleted"
-  )
+  ),
+  // -- Selection mode actions -----------------------------------------------
+  setSelectionMode: (mode) => set({ selectionMode: mode }, false, "extraction/setSelectionMode"),
+  setSelectorPath: (path) => set({ selectorPath: path }, false, "extraction/setSelectorPath"),
+  setManualSelector: (selector) => set({ manualSelector: selector }, false, "extraction/setManualSelector"),
+  setMatchCount: (count) => set({ matchCount: count }, false, "extraction/setMatchCount"),
+  // -- Field mapping actions ------------------------------------------------
+  setFields: (fields) => set({ fields }, false, "extraction/setFields"),
+  toggleField: (fieldId) => set(
+    (state) => ({
+      fields: state.fields.map(
+        (f) => f.id === fieldId ? { ...f, enabled: !f.enabled } : f
+      )
+    }),
+    false,
+    "extraction/toggleField"
+  ),
+  renameField: (fieldId, name) => set(
+    (state) => ({
+      fields: state.fields.map(
+        (f) => f.id === fieldId ? { ...f, name } : f
+      )
+    }),
+    false,
+    "extraction/renameField"
+  ),
+  removeField: (fieldId) => set(
+    (state) => ({
+      fields: state.fields.filter((f) => f.id !== fieldId)
+    }),
+    false,
+    "extraction/removeField"
+  ),
+  reorderFields: (fieldIds) => set(
+    (state) => {
+      const fieldMap = new Map(state.fields.map((f) => [f.id, f]));
+      const reordered = [];
+      for (const id of fieldIds) {
+        const field = fieldMap.get(id);
+        if (field) reordered.push(field);
+      }
+      for (const field of state.fields) {
+        if (!fieldIds.includes(field.id)) {
+          reordered.push(field);
+        }
+      }
+      return { fields: reordered };
+    },
+    false,
+    "extraction/reorderFields"
+  ),
+  addCustomField: (field) => set(
+    (state) => ({
+      fields: [...state.fields, field]
+    }),
+    false,
+    "extraction/addCustomField"
+  ),
+  // -- Pagination actions ---------------------------------------------------
+  setDetectedPaginationConfigs: (configs) => set({ detectedPaginationConfigs: configs }, false, "extraction/setDetectedPaginationConfigs"),
+  selectPaginationMode: (mode) => set(
+    (state) => ({
+      selectedPaginationMode: mode,
+      paginationConfig: { ...state.paginationConfig, mode }
+    }),
+    false,
+    "extraction/selectPaginationMode"
+  ),
+  setPaginationConfig: (config) => set({ paginationConfig: config }, false, "extraction/setPaginationConfig"),
+  updatePaginationConfig: (partial) => set(
+    (state) => ({
+      paginationConfig: { ...state.paginationConfig, ...partial }
+    }),
+    false,
+    "extraction/updatePaginationConfig"
+  ),
+  // -- Speed tracking actions -----------------------------------------------
+  addSpeedEntry: (entry) => set(
+    (state) => ({
+      speedHistory: [...state.speedHistory.slice(-59), entry]
+    }),
+    false,
+    "extraction/addSpeedEntry"
+  ),
+  clearSpeedHistory: () => set({ speedHistory: [] }, false, "extraction/clearSpeedHistory")
 });
 
 function matchesFilter(row, filter) {
