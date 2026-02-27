@@ -1772,7 +1772,6 @@
   }
 
   const EXTENSION_NAME = "DataForge";
-  const WELCOME_URL = "https://dataforge.dev/welcome";
   const UPDATE_URL = "https://dataforge.dev/changelog";
   const extractionManager = new ExtractionManager();
   const tabManager = new TabManager();
@@ -1799,9 +1798,6 @@
       df_version: chrome.runtime.getManifest().version
     }).catch((err) => {
       console.warn(`[${EXTENSION_NAME}] Failed to save install metadata:`, err);
-    });
-    chrome.tabs.create({ url: WELCOME_URL }).catch((err) => {
-      console.warn(`[${EXTENSION_NAME}] Failed to open welcome page:`, err);
     });
   }
   function handleUpdate(previousVersion) {

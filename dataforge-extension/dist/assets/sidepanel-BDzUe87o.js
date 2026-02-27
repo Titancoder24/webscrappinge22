@@ -939,14 +939,17 @@ const initialProgress = {
 const createExtractionSlice = (set) => ({
   // -- State -----------------------------------------------------------------
   status: "idle",
+  extractionStatus: "idle",
   currentConfig: null,
   extractedRows: [],
   progress: { ...initialProgress },
+  extractionProgress: { ...initialProgress },
   detectedPatterns: [],
   selectedPatternId: null,
   activeStep: 0,
   // -- Actions ---------------------------------------------------------------
-  setStatus: (status) => set({ status }, false, "extraction/setStatus"),
+  setStatus: (status) => set({ status, extractionStatus: status }, false, "extraction/setStatus"),
+  setExtractionStatus: (status) => set({ status, extractionStatus: status }, false, "extraction/setStatus"),
   setConfig: (config) => set({ currentConfig: config }, false, "extraction/setConfig"),
   addRow: (row) => set(
     (state) => ({ extractedRows: [...state.extractedRows, row] }),
@@ -959,9 +962,10 @@ const createExtractionSlice = (set) => ({
     "extraction/addRows"
   ),
   setProgress: (partial) => set(
-    (state) => ({
-      progress: { ...state.progress, ...partial }
-    }),
+    (state) => {
+      const updated = { ...state.progress, ...partial };
+      return { progress: updated, extractionProgress: updated };
+    },
     false,
     "extraction/setProgress"
   ),
@@ -1189,6 +1193,7 @@ const createUISlice = (set) => ({
   // -- Actions ---------------------------------------------------------------
   setTab: (tab) => set({ activeTab: tab }, false, "ui/setTab"),
   setTool: (tool) => set({ activeTool: tool }, false, "ui/setTool"),
+  setActiveTool: (tool) => set({ activeTool: tool }, false, "ui/setTool"),
   setSidebarWidth: (width) => set(
     { sidebarWidth: Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, width)) },
     false,
@@ -4075,7 +4080,7 @@ const ToastContainer = () => {
   )) });
 };
 const ToolViewPlaceholder = ({ tool }) => {
-  const setActiveTool = useStore((s) => s.setActiveTool);
+  const setActiveTool = useStore((s) => s.setTool);
   const toolNames = {
     "list-extractor": "List Extractor",
     "page-extractor": "Page Extractor",
@@ -4143,10 +4148,10 @@ const App = () => {
   const activeTab = useStore((s) => s.activeTab);
   const activeTool = useStore((s) => s.activeTool);
   const setTab = useStore((s) => s.setTab);
-  const extractionStatus = useStore((s) => s.extractionStatus);
-  const extractionProgress = useStore((s) => s.extractionProgress);
+  const extractionStatus = useStore((s) => s.status);
+  const extractionProgress = useStore((s) => s.progress);
   const extractedRows = useStore((s) => s.extractedRows);
-  const setExtractionStatus = useStore((s) => s.setExtractionStatus);
+  const setExtractionStatus = useStore((s) => s.setStatus);
   useSettings();
   const handleTabChange = reactExports.useCallback(
     (tab) => {

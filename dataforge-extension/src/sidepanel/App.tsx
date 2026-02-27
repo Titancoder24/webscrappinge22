@@ -228,7 +228,7 @@ const ToastContainer: React.FC = () => {
  * In production, this would route to the specific tool component.
  */
 const ToolViewPlaceholder: React.FC<{ tool: ToolType }> = ({ tool }) => {
-  const setActiveTool = useStore((s) => s.setActiveTool);
+  const setActiveTool = useStore((s) => s.setTool);
 
   const toolNames: Record<ToolType, string> = {
     'list-extractor': 'List Extractor',
@@ -312,10 +312,10 @@ const App: React.FC = () => {
   const activeTab = useStore((s) => s.activeTab);
   const activeTool = useStore((s) => s.activeTool);
   const setTab = useStore((s) => s.setTab);
-  const extractionStatus = useStore((s) => s.extractionStatus);
-  const extractionProgress = useStore((s) => s.extractionProgress);
+  const extractionStatus = useStore((s) => s.status);
+  const extractionProgress = useStore((s) => s.progress);
   const extractedRows = useStore((s) => s.extractedRows);
-  const setExtractionStatus = useStore((s) => s.setExtractionStatus);
+  const setExtractionStatus = useStore((s) => s.setStatus);
 
   // Initialize settings
   useSettings();

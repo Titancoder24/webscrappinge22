@@ -44,9 +44,14 @@ export interface ExtractionSlice {
    */
   activeStep: number;
 
+  // -- Aliases (used by components) -------------------------------------------
+  extractionStatus: ExtractionStatus;
+  extractionProgress: ExtractionProgress;
+
   // -- Actions ---------------------------------------------------------------
 
   setStatus: (status: ExtractionStatus) => void;
+  setExtractionStatus: (status: ExtractionStatus) => void;
   setConfig: (config: ExtractionConfig | null) => void;
   addRow: (row: Row) => void;
   addRows: (rows: Row[]) => void;
@@ -84,9 +89,11 @@ export const createExtractionSlice: StateCreator<
 > = (set) => ({
   // -- State -----------------------------------------------------------------
   status: 'idle',
+  extractionStatus: 'idle',
   currentConfig: null,
   extractedRows: [],
   progress: { ...initialProgress },
+  extractionProgress: { ...initialProgress },
   detectedPatterns: [],
   selectedPatternId: null,
   activeStep: 0,
@@ -94,7 +101,10 @@ export const createExtractionSlice: StateCreator<
   // -- Actions ---------------------------------------------------------------
 
   setStatus: (status) =>
-    set({ status }, false, 'extraction/setStatus'),
+    set({ status, extractionStatus: status }, false, 'extraction/setStatus'),
+
+  setExtractionStatus: (status) =>
+    set({ status, extractionStatus: status }, false, 'extraction/setStatus'),
 
   setConfig: (config) =>
     set({ currentConfig: config }, false, 'extraction/setConfig'),
@@ -115,9 +125,10 @@ export const createExtractionSlice: StateCreator<
 
   setProgress: (partial) =>
     set(
-      (state) => ({
-        progress: { ...state.progress, ...partial },
-      }),
+      (state) => {
+        const updated = { ...state.progress, ...partial };
+        return { progress: updated, extractionProgress: updated };
+      },
       false,
       'extraction/setProgress',
     ),

@@ -60,6 +60,7 @@ export interface UISlice {
 
   setTab: (tab: NavigationTab) => void;
   setTool: (tool: ToolType | null) => void;
+  setActiveTool: (tool: ToolType | null) => void;
   setSidebarWidth: (width: number) => void;
   setLoading: (loading: boolean) => void;
   addToast: (toast: Omit<Toast, 'id'> & { id?: string }) => string;
@@ -102,6 +103,9 @@ export const createUISlice: StateCreator<
     set({ activeTab: tab }, false, 'ui/setTab'),
 
   setTool: (tool) =>
+    set({ activeTool: tool }, false, 'ui/setTool'),
+
+  setActiveTool: (tool) =>
     set({ activeTool: tool }, false, 'ui/setTool'),
 
   setSidebarWidth: (width) =>

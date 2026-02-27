@@ -88,10 +88,7 @@ function handleFirstInstall(): void {
     console.warn(`[${EXTENSION_NAME}] Failed to save install metadata:`, err);
   });
 
-  // Open the welcome page in a new tab
-  chrome.tabs.create({ url: WELCOME_URL }).catch((err) => {
-    console.warn(`[${EXTENSION_NAME}] Failed to open welcome page:`, err);
-  });
+  // Side panel will open on first click — no external page needed.
 }
 
 function handleUpdate(previousVersion: string | undefined): void {
