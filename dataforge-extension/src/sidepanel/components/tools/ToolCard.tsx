@@ -102,7 +102,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
           'group-hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]',
         ].join(' ')}
       >
-        <span className="text-lg leading-none">{icon}</span>
+        <span className="flex items-center justify-center">{icon}</span>
       </div>
 
       {/* Text content */}

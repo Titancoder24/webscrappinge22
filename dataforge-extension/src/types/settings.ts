@@ -1,6 +1,6 @@
 export interface Settings {
   general: {
-    theme: 'dark';
+    theme: 'light' | 'dark';
     animationsEnabled: boolean;
     notificationsEnabled: boolean;
     autoSaveHistory: boolean;

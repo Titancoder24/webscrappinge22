@@ -76,8 +76,8 @@ const BottomBar: React.FC<BottomBarProps> = ({
           className="h-full rounded-r-full transition-[width] duration-300 ease-out motion-reduce:transition-none"
           style={{
             width: `${clampedProgress}%`,
-            background: 'linear-gradient(90deg, #10B981, #14B8A6)',
-            boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
+            background: 'linear-gradient(90deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)))',
+            boxShadow: '0 0 8px var(--accent-glow)',
           }}
         />
       </div>
@@ -193,9 +193,9 @@ const BottomBar: React.FC<BottomBarProps> = ({
           onClick={handleViewData}
           className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
           style={{
-            background: 'linear-gradient(135deg, #10B981, #14B8A6)',
-            color: '#0A0F0D',
-            boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)',
+            background: 'linear-gradient(135deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)))',
+            color: 'rgb(var(--forge-bg))',
+            boxShadow: '0 0 12px var(--accent-glow)',
           }}
           aria-label="View extracted data"
         >

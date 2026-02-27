@@ -92,7 +92,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, badges 
             ].join(' ')}
             style={
               isActive
-                ? { textShadow: '0 0 10px rgba(16, 185, 129, 0.6)' }
+                ? { textShadow: '0 0 10px var(--accent-glow)' }
                 : undefined
             }
           >
@@ -119,8 +119,8 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, badges 
         style={{
           left: indicatorStyle.left,
           width: indicatorStyle.width,
-          background: 'linear-gradient(90deg, #10B981, #14B8A6)',
-          boxShadow: '0 0 8px rgba(16, 185, 129, 0.5), 0 0 2px rgba(16, 185, 129, 0.3)',
+          background: 'linear-gradient(90deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)))',
+          boxShadow: '0 0 8px var(--accent-glow)',
         }}
         aria-hidden="true"
       />

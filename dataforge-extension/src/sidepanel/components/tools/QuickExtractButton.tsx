@@ -62,7 +62,7 @@ const QuickExtractButton: React.FC = () => {
 
       addToast({
         type: 'success',
-        title: 'Quick Extract started',
+        title: 'Instant Extract started',
         message: `Found ${topPattern.itemCount} items using ${topPattern.category} pattern`,
         duration: 4000,
       });
@@ -70,7 +70,7 @@ const QuickExtractButton: React.FC = () => {
       const message = err instanceof Error ? err.message : 'Quick extraction failed';
       addToast({
         type: 'error',
-        title: 'Quick Extract failed',
+        title: 'Instant Extract failed',
         message,
         duration: 5000,
       });
@@ -157,7 +157,7 @@ const QuickExtractButton: React.FC = () => {
           >
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
           </svg>
-          <span>Quick Extract</span>
+          <span>Instant Extract</span>
         </>
       )}
     </button>

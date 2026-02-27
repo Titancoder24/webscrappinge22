@@ -115,14 +115,8 @@ const TopBar: React.FC<TopBarProps> = ({ onSettingsClick, onMinimizeClick }) => 
         </div>
 
         {/* Wordmark */}
-        <span
-          className="text-lg font-bold tracking-wide text-forge-text"
-          style={{
-            textShadow: '0 0 12px rgba(16, 185, 129, 0.5), 0 0 4px rgba(16, 185, 129, 0.3)',
-          }}
-        >
-          Data
-          <span className="text-accent-primary">Forge</span>
+        <span className="text-lg font-bold tracking-wide text-forge-text">
+          Data<span className="text-accent-primary">Forge</span>
         </span>
       </div>
 

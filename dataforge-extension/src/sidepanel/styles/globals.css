@@ -3,6 +3,57 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
+/* Theme variables                                                     */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Light mode (default) */
+  --forge-bg: 255 255 255;
+  --forge-bg-secondary: 248 250 252;
+  --forge-bg-tertiary: 241 245 249;
+  --forge-surface: rgba(241, 245, 249, 0.6);
+  --forge-border: 226 232 240;
+  --forge-border-active: 16 185 129;
+  --forge-text: 15 23 42;
+  --forge-text-secondary: 71 85 105;
+  --forge-text-muted: 148 163 184;
+
+  --accent-primary: 16 185 129;
+  --accent-secondary: 20 184 166;
+  --accent-tertiary: 52 211 153;
+  --accent-glow: rgba(16, 185, 129, 0.15);
+
+  --scrollbar-thumb: rgba(148, 163, 184, 0.4);
+  --selection-bg: rgba(16, 185, 129, 0.15);
+  --selection-text: 15 23 42;
+  --focus-ring: rgba(16, 185, 129, 0.5);
+  --backdrop-bg: rgba(15, 23, 42, 0.3);
+}
+
+.dark {
+  --forge-bg: 10 15 13;
+  --forge-bg-secondary: 15 26 22;
+  --forge-bg-tertiary: 22 42 34;
+  --forge-surface: rgba(22, 42, 34, 0.6);
+  --forge-border: 30 77 61;
+  --forge-border-active: 16 185 129;
+  --forge-text: 240 253 244;
+  --forge-text-secondary: 134 239 172;
+  --forge-text-muted: 74 222 128;
+
+  --accent-primary: 16 185 129;
+  --accent-secondary: 20 184 166;
+  --accent-tertiary: 52 211 153;
+  --accent-glow: rgba(16, 185, 129, 0.3);
+
+  --scrollbar-thumb: rgba(30, 77, 61, 1);
+  --selection-bg: rgba(16, 185, 129, 0.3);
+  --selection-text: 240 253 244;
+  --focus-ring: rgba(16, 185, 129, 0.6);
+  --backdrop-bg: rgba(10, 15, 13, 0.7);
+}
+
+/* ------------------------------------------------------------------ */
 /* Base layer overrides                                               */
 /* ------------------------------------------------------------------ */
 
@@ -23,22 +74,19 @@
   *::before,
   *::after {
     scrollbar-width: thin;
-    scrollbar-color: #1E4D3D transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
 
-  /* Selection color */
   ::selection {
-    background: rgba(16, 185, 129, 0.3);
-    color: #F0FDF4;
+    background: var(--selection-bg);
+    color: rgb(var(--selection-text));
   }
 
-  /* Focus ring - emerald accent */
   :focus-visible {
-    outline: 2px solid rgba(16, 185, 129, 0.6);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 
-  /* Remove default focus for mouse users */
   :focus:not(:focus-visible) {
     outline: none;
   }
@@ -49,46 +97,40 @@
 /* ------------------------------------------------------------------ */
 
 @layer components {
-  /* Glassmorphism card */
   .glass-card {
     @apply bg-forge-surface backdrop-blur-md rounded-xl border border-forge-border;
   }
 
-  /* Emerald gradient text */
   .text-gradient-emerald {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #10B981, #14B8A6);
+    background-image: linear-gradient(135deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)));
   }
 
-  /* Emerald gradient background */
   .bg-gradient-emerald {
-    background: linear-gradient(135deg, #10B981, #14B8A6);
+    background: linear-gradient(135deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)));
   }
 
-  /* Emerald glow box-shadow */
   .glow-emerald {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.25), 0 0 6px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 0 20px var(--accent-glow), 0 0 6px var(--accent-glow);
   }
 
   .glow-emerald-sm {
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2), 0 0 3px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 10px var(--accent-glow), 0 0 3px var(--accent-glow);
   }
 
   .glow-emerald-lg {
-    box-shadow: 0 0 30px rgba(16, 185, 129, 0.35), 0 0 10px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 30px var(--accent-glow), 0 0 10px var(--accent-glow);
   }
 
-  /* Emerald border glow on hover */
   .border-glow-hover {
     @apply border border-forge-border transition-all duration-300;
   }
 
   .border-glow-hover:hover {
-    border-color: rgba(16, 185, 129, 0.5);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15), inset 0 0 15px rgba(16, 185, 129, 0.05);
+    border-color: rgb(var(--accent-primary) / 0.5);
+    box-shadow: 0 0 15px var(--accent-glow), inset 0 0 15px rgb(var(--accent-primary) / 0.05);
   }
 
-  /* Lift effect */
   .hover-lift {
     @apply transition-transform duration-300;
   }
@@ -97,7 +139,6 @@
     transform: translateY(-2px);
   }
 
-  /* Emerald-themed input */
   .input-forge {
     @apply bg-forge-bg-secondary border border-forge-border rounded-lg px-3 py-2 text-sm text-forge-text
       placeholder:text-forge-text-muted/50
@@ -105,7 +146,6 @@
       transition-all duration-200;
   }
 
-  /* Toggle switch base */
   .toggle-switch {
     @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full
       border-2 border-transparent transition-colors duration-200 ease-in-out;
@@ -132,7 +172,6 @@
     transform: translateX(0px);
   }
 
-  /* Status badge */
   .badge-success {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
       bg-status-success/15 text-status-success;
@@ -153,7 +192,6 @@
       bg-status-info/15 text-status-info;
   }
 
-  /* Toast container */
   .toast-container {
     @apply fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none;
   }
@@ -168,7 +206,6 @@
 /* ------------------------------------------------------------------ */
 
 @layer utilities {
-  /* Hide scrollbar but keep scrolling */
   .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -178,7 +215,6 @@
     display: none;
   }
 
-  /* Stagger animation delay helpers */
   .stagger-1 { animation-delay: 50ms; }
   .stagger-2 { animation-delay: 100ms; }
   .stagger-3 { animation-delay: 150ms; }
@@ -188,9 +224,8 @@
   .stagger-7 { animation-delay: 350ms; }
   .stagger-8 { animation-delay: 400ms; }
 
-  /* Backdrop for modals/overlays */
   .forge-backdrop {
-    background: rgba(10, 15, 13, 0.7);
+    background: var(--backdrop-bg);
     backdrop-filter: blur(4px);
   }
 }
