@@ -304,9 +304,20 @@ const App: React.FC = () => {
   const extractionProgress = useStore((s) => s.progress);
   const extractedRows = useStore((s) => s.extractedRows);
   const setExtractionStatus = useStore((s) => s.setStatus);
+  const theme = useStore((s) => s.settings.general.theme);
 
   // Initialize settings
   useSettings();
+
+  // Apply theme class to document root
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   // ---- Tab change handler ----
   const handleTabChange = useCallback(

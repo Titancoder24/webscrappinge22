@@ -198,8 +198,18 @@ const SettingsView: React.FC = () => {
       </div>
 
       {/* ---- General ---- */}
-      <SettingsSection title="General" icon={'\u{2699}\uFE0F'} defaultExpanded>
+      <SettingsSection title="General" defaultExpanded>
         <div className="flex flex-col">
+          <SettingSelect
+            label="Appearance"
+            description="Choose between light and dark mode"
+            value={settings.general.theme}
+            options={[
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
+            onChange={(v) => updateSettings({ general: { theme: v as 'light' | 'dark' } })}
+          />
           <SettingToggle
             label="Animations"
             description="Enable UI animations and transitions"
@@ -222,7 +232,7 @@ const SettingsView: React.FC = () => {
       </SettingsSection>
 
       {/* ---- Extraction ---- */}
-      <SettingsSection title="Extraction" icon={'\u{26A1}'} defaultExpanded={false}>
+      <SettingsSection title="Extraction" defaultExpanded={false}>
         <div className="flex flex-col">
           <SettingSlider
             label="Max Items"
@@ -281,7 +291,7 @@ const SettingsView: React.FC = () => {
       </SettingsSection>
 
       {/* ---- Export ---- */}
-      <SettingsSection title="Export" icon={'\u{1F4E4}'} defaultExpanded={false}>
+      <SettingsSection title="Export" defaultExpanded={false}>
         <div className="flex flex-col">
           <SettingSelect
             label="Default Format"
@@ -343,7 +353,7 @@ const SettingsView: React.FC = () => {
       </SettingsSection>
 
       {/* ---- Advanced ---- */}
-      <SettingsSection title="Advanced" icon={'\u{1F527}'} defaultExpanded={false}>
+      <SettingsSection title="Advanced" defaultExpanded={false}>
         <div className="flex flex-col">
           <SettingSelect
             label="Selector Strategy"

@@ -5,25 +5,26 @@ const config: Config = {
     './src/**/*.{ts,tsx}',
     './sidepanel.html',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         forge: {
-          bg: '#0A0F0D',
-          'bg-secondary': '#0F1A16',
-          'bg-tertiary': '#162A22',
-          surface: 'rgba(22, 42, 34, 0.6)',
-          border: '#1E4D3D',
-          'border-active': '#10B981',
-          text: '#F0FDF4',
-          'text-secondary': '#86EFAC',
-          'text-muted': '#4ADE80',
+          bg: 'rgb(var(--forge-bg) / <alpha-value>)',
+          'bg-secondary': 'rgb(var(--forge-bg-secondary) / <alpha-value>)',
+          'bg-tertiary': 'rgb(var(--forge-bg-tertiary) / <alpha-value>)',
+          surface: 'var(--forge-surface)',
+          border: 'rgb(var(--forge-border) / <alpha-value>)',
+          'border-active': 'rgb(var(--forge-border-active) / <alpha-value>)',
+          text: 'rgb(var(--forge-text) / <alpha-value>)',
+          'text-secondary': 'rgb(var(--forge-text-secondary) / <alpha-value>)',
+          'text-muted': 'rgb(var(--forge-text-muted) / <alpha-value>)',
         },
         accent: {
-          primary: '#10B981',
-          secondary: '#14B8A6',
-          tertiary: '#34D399',
-          glow: 'rgba(16, 185, 129, 0.3)',
+          primary: 'rgb(var(--accent-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--accent-secondary) / <alpha-value>)',
+          tertiary: 'rgb(var(--accent-tertiary) / <alpha-value>)',
+          glow: 'var(--accent-glow)',
         },
         status: {
           success: '#10B981',
@@ -53,8 +54,8 @@ const config: Config = {
       },
       keyframes: {
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)' },
-          '50%': { boxShadow: '0 0 25px rgba(16, 185, 129, 0.5)' },
+          '0%, 100%': { boxShadow: '0 0 10px var(--accent-glow)' },
+          '50%': { boxShadow: '0 0 25px var(--accent-glow)' },
         },
         scanBeam: {
           '0%': { backgroundPosition: '-100% 0' },

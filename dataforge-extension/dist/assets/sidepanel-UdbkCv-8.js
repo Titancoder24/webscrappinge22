@@ -1953,19 +1953,10 @@ const TopBar = ({ onSettingsClick, onMinimizeClick }) => {
               ]
             }
           ) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "span",
-            {
-              className: "text-lg font-bold tracking-wide text-forge-text",
-              style: {
-                textShadow: "0 0 12px rgba(16, 185, 129, 0.5), 0 0 4px rgba(16, 185, 129, 0.3)"
-              },
-              children: [
-                "Data",
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-accent-primary", children: "Forge" })
-              ]
-            }
-          )
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-lg font-bold tracking-wide text-forge-text", children: [
+            "Data",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-accent-primary", children: "Forge" })
+          ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -2093,7 +2084,7 @@ const Navigation = ({ activeTab, onTabChange, badges }) => {
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-forge-bg-secondary",
                 isActive ? "text-accent-primary" : "text-forge-text-muted hover:text-forge-text-secondary"
               ].join(" "),
-              style: isActive ? { textShadow: "0 0 10px rgba(16, 185, 129, 0.6)" } : void 0,
+              style: isActive ? { textShadow: "0 0 10px var(--accent-glow)" } : void 0,
               children: [
                 label,
                 badgeCount != null && badgeCount > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -2118,8 +2109,8 @@ const Navigation = ({ activeTab, onTabChange, badges }) => {
             style: {
               left: indicatorStyle.left,
               width: indicatorStyle.width,
-              background: "linear-gradient(90deg, #10B981, #14B8A6)",
-              boxShadow: "0 0 8px rgba(16, 185, 129, 0.5), 0 0 2px rgba(16, 185, 129, 0.3)"
+              background: "linear-gradient(90deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)))",
+              boxShadow: "0 0 8px var(--accent-glow)"
             },
             "aria-hidden": "true"
           }
@@ -2177,8 +2168,8 @@ const BottomBar = ({
                 className: "h-full rounded-r-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
                 style: {
                   width: `${clampedProgress}%`,
-                  background: "linear-gradient(90deg, #10B981, #14B8A6)",
-                  boxShadow: "0 0 8px rgba(16, 185, 129, 0.4)"
+                  background: "linear-gradient(90deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)))",
+                  boxShadow: "0 0 8px var(--accent-glow)"
                 }
               }
             )
@@ -2302,9 +2293,9 @@ const BottomBar = ({
               onClick: handleViewData,
               className: "flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100",
               style: {
-                background: "linear-gradient(135deg, #10B981, #14B8A6)",
-                color: "#0A0F0D",
-                boxShadow: "0 0 12px rgba(16, 185, 129, 0.3)"
+                background: "linear-gradient(135deg, rgb(var(--accent-primary)), rgb(var(--accent-secondary)))",
+                color: "rgb(var(--forge-bg))",
+                boxShadow: "0 0 12px var(--accent-glow)"
               },
               "aria-label": "View extracted data",
               children: [
@@ -2483,7 +2474,7 @@ const ToolCard = ({
               "group-hover:border-accent-primary/20",
               "group-hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]"
             ].join(" "),
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg leading-none", children: icon })
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex items-center justify-center", children: icon })
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
@@ -2797,7 +2788,7 @@ const QuickExtractButton = () => {
       await startExtraction();
       addToast({
         type: "success",
-        title: "Quick Extract started",
+        title: "Instant Extract started",
         message: `Found ${topPattern.itemCount} items using ${topPattern.category} pattern`,
         duration: 4e3
       });
@@ -2805,7 +2796,7 @@ const QuickExtractButton = () => {
       const message = err instanceof Error ? err.message : "Quick extraction failed";
       addToast({
         type: "error",
-        title: "Quick Extract failed",
+        title: "Instant Extract failed",
         message,
         duration: 5e3
       });
@@ -2896,7 +2887,7 @@ const QuickExtractButton = () => {
             children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13 2L3 14h9l-1 8 10-12h-9l1-8z" })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Quick Extract" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Instant Extract" })
       ] })
     }
   );
@@ -2905,38 +2896,66 @@ const QuickExtractButton = () => {
 const TOOLS = [
   {
     id: "list-extractor",
-    icon: "📋",
-    title: "List Extractor",
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", className: "text-accent-primary", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "3", width: "18", height: "18", rx: "2" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "3", y1: "9", x2: "21", y2: "9" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "3", y1: "15", x2: "21", y2: "15" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "9", y1: "3", x2: "9", y2: "21" })
+    ] }),
+    title: "Structured Data",
     description: "Extract repeating items like products, listings, and tables"
   },
   {
     id: "page-extractor",
-    icon: "📄",
-    title: "Page Extractor",
-    description: "Scrape structured data from single or multiple pages"
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", className: "text-accent-primary", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "3.27 6.96 12 12.01 20.73 6.96" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "22.08", x2: "12", y2: "12" })
+    ] }),
+    title: "Page Harvester",
+    description: "Scrape structured fields from single or multiple pages"
   },
   {
     id: "email-extractor",
-    icon: "📧",
-    title: "Email Extractor",
-    description: "Find and collect email addresses from any webpage"
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", className: "text-accent-primary", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "9", cy: "7", r: "4" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" })
+    ] }),
+    title: "Contact Finder",
+    description: "Discover and collect email addresses from any webpage"
   },
   {
     id: "image-downloader",
-    icon: "🖼️",
-    title: "Image Downloader",
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", className: "text-accent-primary", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "3", width: "18", height: "18", rx: "2", ry: "2" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "8.5", cy: "8.5", r: "1.5" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "21 15 16 10 5 21" })
+    ] }),
+    title: "Media Collector",
     description: "Bulk download images with filtering by size and type"
   },
   {
     id: "text-extractor",
-    icon: "📝",
-    title: "Text Extractor",
-    description: "Extract clean text content, articles, and paragraphs"
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", className: "text-accent-primary", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "14 2 14 8 20 8" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "16", y1: "13", x2: "8", y2: "13" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "16", y1: "17", x2: "8", y2: "17" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "10 9 9 9 8 9" })
+    ] }),
+    title: "Content Parser",
+    description: "Extract clean text, articles, and paragraphs from pages"
   },
   {
     id: "templates",
-    icon: "💾",
-    title: "Templates",
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", className: "text-accent-primary", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "3", width: "18", height: "18", rx: "2", ry: "2" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "3", y1: "9", x2: "21", y2: "9" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "9", y1: "21", x2: "9", y2: "9" })
+    ] }),
+    title: "Presets",
     description: "Save and reuse extraction configurations across sites"
   }
 ];
@@ -3902,7 +3921,20 @@ const SettingsView = () => {
   }, [resetSettings]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 p-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-between mb-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-sm font-semibold text-forge-text", children: "Settings" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "General", icon: "⚙️", defaultExpanded: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "General", defaultExpanded: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SettingSelect,
+        {
+          label: "Appearance",
+          description: "Choose between light and dark mode",
+          value: settings.general.theme,
+          options: [
+            { value: "light", label: "Light" },
+            { value: "dark", label: "Dark" }
+          ],
+          onChange: (v) => updateSettings({ general: { theme: v } })
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         SettingToggle,
         {
@@ -3931,7 +3963,7 @@ const SettingsView = () => {
         }
       )
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "Extraction", icon: "⚡", defaultExpanded: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "Extraction", defaultExpanded: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         SettingSlider,
         {
@@ -4007,7 +4039,7 @@ const SettingsView = () => {
         }
       )
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "Export", icon: "📤", defaultExpanded: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "Export", defaultExpanded: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         SettingSelect,
         {
@@ -4083,7 +4115,7 @@ const SettingsView = () => {
         }
       )
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "Advanced", icon: "🔧", defaultExpanded: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsSection, { title: "Advanced", defaultExpanded: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         SettingSelect,
         {
@@ -10989,7 +11021,16 @@ const App = () => {
   const extractionProgress = useStore((s) => s.progress);
   const extractedRows = useStore((s) => s.extractedRows);
   const setExtractionStatus = useStore((s) => s.setStatus);
+  const theme = useStore((s) => s.settings.general.theme);
   useSettings();
+  reactExports.useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [theme]);
   const handleTabChange = reactExports.useCallback(
     (tab) => {
       if (showSettings) {
