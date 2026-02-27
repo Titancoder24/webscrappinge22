@@ -1,0 +1,716 @@
+/* ==========================================================================
+   DataForge Content Overlay Styles
+   ==========================================================================
+   All overlay UI injected into host pages. Every class is prefixed with
+   "df-" to avoid collisions with host page CSS.
+
+   Design system:
+     - Primary accent:   emerald  #10B981
+     - Secondary accent:  teal    #14B8A6
+     - Light emerald:              #34D399
+     - Pale emerald:               #6EE7B7
+     - Emerald tint bg:            rgba(16, 185, 129, 0.08)
+     - Dark base (glass):          rgba(6, 78, 59, 0.90)
+     - Text on dark:               #D1FAE5
+
+   All animations are GPU-accelerated (transform + opacity only).
+   will-change is declared sparingly and only on actively animated elements.
+   Transitions: 150ms for micro-interactions, 300ms for major state changes.
+   z-index: 2147483646 for overlays, 2147483647 for tooltips.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   a) .df-overlay-container – Main overlay container
+   ========================================================================== */
+
+.df-overlay-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2147483646;
+  overflow: visible;
+  /* Ensure container itself is invisible and non-intrusive */
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ==========================================================================
+   b) .df-highlight – Element highlight border (emerald, animated)
+   ========================================================================== */
+
+.df-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px solid #10B981;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.06);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.97);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+  will-change: transform, opacity;
+}
+
+.df-highlight--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.df-highlight--hover {
+  border-color: #14B8A6;
+  background: rgba(20, 184, 166, 0.10);
+  box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.25);
+}
+
+.df-highlight--selected {
+  border-color: #10B981;
+  border-width: 2.5px;
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+}
+
+/* Subtle pulse for selected elements */
+@keyframes df-highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+  }
+}
+
+.df-highlight--pulse {
+  animation: df-highlight-pulse 2s ease-in-out infinite;
+}
+
+
+/* ==========================================================================
+   c) .df-highlight-wave – Staggered wave animation on highlights
+   ========================================================================== */
+
+@keyframes df-wave-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translate3d(0, 4px, 0);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.01) translate3d(0, -1px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+.df-highlight-wave {
+  animation: df-wave-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+
+/* ==========================================================================
+   d) .df-cursor-crosshair – Custom crosshair cursor with pulsing ring
+   ========================================================================== */
+
+.df-cursor-crosshair,
+.df-cursor-crosshair * {
+  cursor: crosshair !important;
+}
+
+.df-cursor-crosshair::after {
+  content: '';
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+
+/* Pulsing ring that follows the cursor (positioned via JS) */
+.df-cursor-ring {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  margin-top: -16px;
+  border: 2px solid #10B981;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0.7;
+  transform: translate3d(0, 0, 0) scale(1);
+  will-change: transform, opacity;
+  animation: df-ring-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes df-ring-pulse {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(0, 0, 0) scale(1.35);
+    opacity: 0.25;
+  }
+}
+
+
+/* ==========================================================================
+   e) .df-cursor-tooltip – Floating tooltip near cursor
+   ========================================================================== */
+
+.df-cursor-tooltip {
+  position: fixed;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(6, 78, 59, 0.92);
+  color: #D1FAE5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0;
+  transform: translate3d(0, 4px, 0);
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+  will-change: opacity, transform;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.df-cursor-tooltip--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Emerald dot indicator inside tooltip */
+.df-cursor-tooltip__icon {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  vertical-align: middle;
+}
+
+/* Highlighted count text */
+.df-cursor-tooltip__count {
+  color: #6EE7B7;
+  font-weight: 700;
+}
+
+
+/* ==========================================================================
+   f) .df-selection-rect – Selection rectangle overlay (drag-select)
+   ========================================================================== */
+
+.df-selection-rect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border: 2px dashed #10B981;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.05);
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  transform-origin: top left;
+  transition: opacity 100ms ease-out;
+  will-change: transform, opacity;
+}
+
+.df-selection-rect--active {
+  opacity: 1;
+}
+
+/* Animated dashed border using a marching-ants technique */
+@keyframes df-marching-ants {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -16;
+  }
+}
+
+.df-selection-rect--active {
+  background-image: none;
+  /* The animated border is handled by the solid CSS border above;
+     the marching-ants keyframe can be applied via SVG if needed */
+}
+
+
+/* ==========================================================================
+   g) .df-floating-badge – Pattern detection badge (glassmorphism)
+   ========================================================================== */
+
+.df-floating-badge {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  background: rgba(6, 78, 59, 0.88);
+  color: #A7F3D0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(16, 185, 129, 0.08);
+  /* Float animation applied when visible */
+}
+
+.df-floating-badge--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  animation: df-float 3s ease-in-out infinite;
+  animation-delay: 300ms;
+}
+
+/* Gentle up/down float animation */
+@keyframes df-float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+/* Hover state (pointer-events enabled on these badges) */
+.df-floating-badge:hover {
+  background: rgba(6, 78, 59, 0.95);
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.df-floating-badge:active {
+  transform: translate3d(0, 1px, 0) scale(0.97);
+}
+
+
+/* ==========================================================================
+   h) .df-scanner-beam – Horizontal scan animation
+   ========================================================================== */
+
+.df-scanner-beam {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 2147483646;
+  overflow: hidden;
+  border-radius: 4px;
+  /* Emerald gradient sweep overlay */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(16, 185, 129, 0.15) 30%,
+    rgba(20, 184, 166, 0.25) 50%,
+    rgba(16, 185, 129, 0.15) 70%,
+    transparent 100%
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+  clip-path: inset(0 100% 0 0);
+}
+
+
+/* ==========================================================================
+   i) .df-scanner-complete – Post-scan green glow
+   ========================================================================== */
+
+.df-scanner-complete {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 2147483646;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow:
+    inset 0 0 12px rgba(16, 185, 129, 0.15),
+    0 0 8px rgba(16, 185, 129, 0.10);
+  opacity: 0;
+  will-change: opacity;
+}
+
+
+/* ==========================================================================
+   j) .df-progress-counter – Floating extraction count badge
+   ========================================================================== */
+
+.df-progress-counter {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: rgba(6, 78, 59, 0.92);
+  color: #D1FAE5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.20);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(16, 185, 129, 0.08);
+}
+
+.df-progress-counter--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Pulse animation on count update */
+@keyframes df-counter-pulse {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.df-progress-counter--pulse {
+  animation: df-counter-pulse 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Emerald dot indicator */
+.df-progress-counter__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
+  animation: df-dot-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes df-dot-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Count number - emerald highlight */
+.df-progress-counter__count {
+  color: #6EE7B7;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.5ch;
+}
+
+/* Label text */
+.df-progress-counter__label {
+  color: #A7F3D0;
+  font-weight: 400;
+}
+
+
+/* ==========================================================================
+   k) .df-shockwave – Radial shockwave on click
+   ========================================================================== */
+
+.df-shockwave {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border: 2px solid #10B981;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(0.5);
+  animation: df-shockwave-expand 500ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes df-shockwave-expand {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(4);
+    opacity: 0;
+  }
+}
+
+
+/* ==========================================================================
+   l) .df-checkmark – Brief checkmark overlay after extraction
+   ========================================================================== */
+
+.df-checkmark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2147483646;
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.7);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+.df-checkmark svg {
+  filter: drop-shadow(0 1px 3px rgba(16, 185, 129, 0.5));
+}
+
+
+/* ==========================================================================
+   Selection mode overlay dimming
+   ========================================================================== */
+
+.df-dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.04);
+  pointer-events: none;
+  z-index: 2147483645;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.df-dim--active {
+  opacity: 1;
+}
+
+
+/* ==========================================================================
+   Element count badge on highlights
+   ========================================================================== */
+
+.df-highlight__badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #10B981;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+}
+
+
+/* ==========================================================================
+   Progress bar (used inside counter or standalone)
+   ========================================================================== */
+
+.df-progress-bar {
+  width: 100%;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: rgba(16, 185, 129, 0.15);
+  overflow: hidden;
+}
+
+.df-progress-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #10B981, #14B8A6);
+  transform-origin: left center;
+  transition: transform 300ms ease-out;
+  will-change: transform;
+}
+
+
+/* ==========================================================================
+   @media (prefers-reduced-motion: reduce) – Disable all animations
+   ==========================================================================
+   When the user prefers reduced motion, all animations are stripped to
+   simple opacity fades. Transforms are removed. No keyframe animations. */
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* --- Highlights --- */
+  .df-highlight {
+    transition: opacity 50ms linear;
+    transform: none !important;
+  }
+
+  .df-highlight--visible {
+    transform: none !important;
+  }
+
+  .df-highlight--pulse {
+    animation: none;
+  }
+
+  .df-highlight-wave {
+    animation: none;
+    opacity: 1;
+    transform: none !important;
+  }
+
+  /* --- Cursor ring --- */
+  .df-cursor-ring {
+    animation: none;
+    opacity: 0.6;
+    transform: none !important;
+  }
+
+  /* --- Cursor tooltip --- */
+  .df-cursor-tooltip {
+    transition: opacity 50ms linear;
+    transform: none !important;
+  }
+
+  .df-cursor-tooltip--visible {
+    transform: none !important;
+  }
+
+  /* --- Selection rect --- */
+  .df-selection-rect {
+    transition: opacity 50ms linear;
+    transform: none !important;
+  }
+
+  /* --- Floating badges --- */
+  .df-floating-badge {
+    transition: opacity 50ms linear;
+    transform: none !important;
+  }
+
+  .df-floating-badge--visible {
+    animation: none;
+    transform: none !important;
+  }
+
+  .df-floating-badge:active {
+    transform: none !important;
+  }
+
+  /* --- Scanner beam --- */
+  .df-scanner-beam {
+    /* No gradient sweep, just a brief overlay */
+    clip-path: none !important;
+    opacity: 0.1;
+    transition: opacity 50ms linear;
+  }
+
+  /* --- Scanner complete glow --- */
+  .df-scanner-complete {
+    transition: opacity 100ms linear;
+    box-shadow: none;
+  }
+
+  /* --- Progress counter --- */
+  .df-progress-counter {
+    transition: opacity 50ms linear;
+    transform: none !important;
+  }
+
+  .df-progress-counter--visible {
+    transform: none !important;
+  }
+
+  .df-progress-counter--pulse {
+    animation: none;
+  }
+
+  .df-progress-counter__dot {
+    animation: none;
+    opacity: 0.8;
+  }
+
+  /* --- Shockwave --- */
+  .df-shockwave {
+    animation: none;
+    display: none;
+  }
+
+  /* --- Checkmark --- */
+  .df-checkmark {
+    transition: opacity 50ms linear;
+    transform: none !important;
+  }
+
+  /* --- Dim overlay --- */
+  .df-dim {
+    transition: opacity 50ms linear;
+  }
+
+  /* --- Progress bar --- */
+  .df-progress-bar__fill {
+    transition: transform 50ms linear;
+  }
+}
