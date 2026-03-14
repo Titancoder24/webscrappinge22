@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "DataForge — Universal Web Scraper",
+  "version": "1.0.0",
+  "description": "The world's most powerful web scraper. Extract data from any website with intelligent detection, smart pagination, and one-click export. No code. No account. No limits.",
+  "permissions": [
+    "activeTab",
+    "sidePanel",
+    "storage",
+    "tabs",
+    "scripting",
+    "downloads",
+    "notifications",
+    "alarms",
+    "clipboardWrite",
+    "webNavigation"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "content/engines/pattern-sense.js",
+        "content/engines/selector-forge.js",
+        "content/engines/page-sense.js",
+        "content/engines/type-sense.js",
+        "content/engines/clean-sense.js",
+        "content/content.js"
+      ],
+      "css": ["content/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel/index.html"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "DataForge — Extract Data"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

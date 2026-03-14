@@ -1,0 +1,270 @@
+/* ============================================================
+   DataForge Animations — Premium micro-interactions
+   All GPU-accelerated. All respect prefers-reduced-motion.
+   ============================================================ */
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+@keyframes logo-breathe {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.3)); }
+  50% { filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5)); }
+}
+
+/* ============================================================
+   BUTTON SHIMMER
+   ============================================================ */
+@keyframes btn-shimmer {
+  0% { left: -100%; }
+  30% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* ============================================================
+   PAGE TRANSITIONS
+   ============================================================ */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ============================================================
+   CARD ENTRANCES (staggered)
+   ============================================================ */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-enter > * {
+  opacity: 0;
+  animation: card-enter 250ms ease-out forwards;
+}
+
+.stagger-enter > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-enter > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-enter > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-enter > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-enter > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-enter > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-enter > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-enter > *:nth-child(8) { animation-delay: 350ms; }
+
+/* ============================================================
+   LIVE DATA FEED
+   ============================================================ */
+@keyframes feed-row-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   DROPDOWN
+   ============================================================ */
+@keyframes dropdown-in {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+/* ============================================================
+   COMPLETION
+   ============================================================ */
+@keyframes completion-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================
+   PROGRESS PULSE (radar effect behind progress ring)
+   ============================================================ */
+@keyframes radar-ping {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.radar-pulse {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-violet);
+  animation: radar-ping 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.radar-pulse:nth-child(2) { animation-delay: 0.7s; }
+.radar-pulse:nth-child(3) { animation-delay: 1.4s; }
+
+/* ============================================================
+   COUNTER ANIMATION (odometer-like digit roll)
+   ============================================================ */
+.counter-digit {
+  display: inline-block;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   EXTRACTION PULSE
+   ============================================================ */
+@keyframes extraction-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(139, 92, 246, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(16, 185, 129, 0.2); }
+}
+
+.extracting-glow {
+  animation: extraction-glow 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   CONFETTI PARTICLES
+   ============================================================ */
+@keyframes confetti-fall {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--confetti-x, 20px), var(--confetti-y, 60px)) rotate(var(--confetti-r, 360deg)); opacity: 0; }
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  animation: confetti-fall 800ms ease-out forwards;
+  pointer-events: none;
+}
+
+/* ============================================================
+   SPARKLINE ANIMATION
+   ============================================================ */
+@keyframes sparkline-draw {
+  from { stroke-dashoffset: 200; }
+  to { stroke-dashoffset: 0; }
+}
+
+.sparkline-path {
+  stroke-dasharray: 200;
+  animation: sparkline-draw 1s ease-out forwards;
+}
+
+/* ============================================================
+   SKELETON LOADING
+   ============================================================ */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-elevated) 50%, var(--bg-tertiary) 75%);
+  background-size: 400px 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: var(--sp-2);
+  border-radius: 4px;
+}
+
+.skeleton-text.short { width: 60%; }
+.skeleton-text.medium { width: 80%; }
+.skeleton-text.full { width: 100%; }
+
+/* ============================================================
+   SPINNER
+   ============================================================ */
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent-violet);
+  border-radius: 50%;
+  animation: spinner-rotate 600ms linear infinite;
+}
+
+.spinner-sm { width: 14px; height: 14px; border-width: 1.5px; }
+.spinner-lg { width: 32px; height: 32px; border-width: 3px; }
+
+/* ============================================================
+   TAB INDICATOR SLIDE
+   ============================================================ */
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent-gradient);
+  border-radius: 1px;
+  transition: left 250ms cubic-bezier(0.34, 1.56, 0.64, 1), width 250ms ease;
+}
+
+/* ============================================================
+   SECTION TRANSITION
+   ============================================================ */
+.view-enter {
+  animation: slide-in-right 250ms ease-out;
+}
+
+.view-exit {
+  animation: fade-out 150ms ease-out forwards;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
